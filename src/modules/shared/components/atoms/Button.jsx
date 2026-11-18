@@ -1,20 +1,20 @@
+import Spinner from './Spinner';
+
+// Variants of spec 10: primary (main action), secondary (cancel, back),
+// danger (destructive) and ghost (low emphasis).
 function Button({
   children,
   type = 'button',
-  variant = 'default',
+  variant = 'primary',
+  loading = false,
+  disabled = false,
   className = '',
   ...restProps
 }) {
-  if (!['button', 'reset', 'submit'].includes(type)) {
-    console.warn('type prop not supported');
-  }
-
   const variantStyle = {
-    default:
+    primary:
       'bg-med-primary-900 hover:bg-med-primary-800 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition',
     secondary:
-      'border border-med-primary-900 text-med-primary-900 bg-white hover:bg-med-primary-50 font-medium px-4 py-2 rounded-lg transition',
-    outline:
       'border border-med-border text-med-text-main bg-white hover:bg-gray-50 font-medium px-4 py-2 rounded-lg transition',
     ghost:
       'text-med-text-sub hover:bg-med-primary-50 hover:text-med-primary-900 font-medium px-3 py-2 rounded-lg transition',
@@ -23,10 +23,17 @@ function Button({
   };
 
   const appliedClass =
-    `${variantStyle[variant] || variantStyle.default} ${className}`.trim();
+    `min-h-11 ${variantStyle[variant] || variantStyle.primary} disabled:opacity-60 disabled:cursor-not-allowed ${loading ? 'inline-flex items-center justify-center gap-2' : ''} ${className}`.trim();
 
   return (
-    <button {...restProps} className={appliedClass} type={type}>
+    <button
+      {...restProps}
+      className={appliedClass}
+      type={type}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+    >
+      {loading && <Spinner />}
       {children}
     </button>
   );

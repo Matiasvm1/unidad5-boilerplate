@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import Card from '../../shared/components/Card';
-import Button from '../../shared/components/Button';
+import Card from '../../shared/components/atoms/Card';
+import Button from '../../shared/components/atoms/Button';
 
 function OverviewPage() {
   const navigate = useNavigate();

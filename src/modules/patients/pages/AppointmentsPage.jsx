@@ -1,5 +1,5 @@
-import Card from '../../shared/components/Card';
-import Button from '../../shared/components/Button';
+import Card from '../../shared/components/atoms/Card';
+import Button from '../../shared/components/atoms/Button';
 
 function AppointmentsPage() {
   const sampleAppointments = [
@@ -75,7 +75,7 @@ function AppointmentsPage() {
             </div>
             <div className="flex gap-2 pt-3 border-t border-med-border">
               <Button
-                variant="outline"
+                variant="secondary"
                 className="w-full text-xs"
                 onClick={() => alert(`Cancelando turno ${appt.id}`)}
               >
