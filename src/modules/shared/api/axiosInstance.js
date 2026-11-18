@@ -1,8 +1,8 @@
 import axios from 'axios';
+import { ApiError } from './apiError';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
-  withCredentials: true,
 });
 
 instance.interceptors.request.use(
@@ -32,7 +32,7 @@ instance.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(ApiError.fromAxiosError(error));
   }
 );
 

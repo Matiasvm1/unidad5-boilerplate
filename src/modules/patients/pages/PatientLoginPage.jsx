@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import Button from '../../shared/components/Button';
-import useAuth from '../../auth/hook/useAuth';
+import Button from '../../shared/components/atoms/Button';
+import useAuth from '../../auth/hooks/useAuth';
 import { frontendErrorMessage } from '../../auth/helpers/backendError';
 
 function PatientLoginPage() {
