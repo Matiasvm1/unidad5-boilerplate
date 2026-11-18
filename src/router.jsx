@@ -19,6 +19,7 @@ import OverviewPage from './modules/dashboard/pages/OverviewPage';
 // Domain Modules (Screaming Architecture)
 import DoctorsPage from './modules/doctors/pages/DoctorsPage';
 import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
+import AvailabilityPage from './modules/availabilities/pages/AvailabilityPage';
 import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
 
 const routes = [
@@ -73,6 +74,14 @@ const routes = [
           {
             path: 'home',
             element: <OverviewPage />,
+          },
+          {
+            path: 'doctors/availability',
+            element: <AvailabilityPage />,
+          },
+          {
+            path: 'doctors/:id/availability',
+            element: <AvailabilityPage />,
           },
           {
             path: 'doctors',
