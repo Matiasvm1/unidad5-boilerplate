@@ -1,0 +1,3842 @@
+# Tareas de Nicolás — Frontend
+
+Esto es tu parte del plan del frontend, `17-PLAN-FRONT.md`. Leelo antes que este documento: ahí
+están el reparto y el orden de merge (sección 2), las reglas de juego (sección 4), cómo trabajar
+cada tarea paso a paso (sección 5), el checklist antes del Pull Request (sección 6), qué hacer con
+`git pull` y los conflictos (sección 7), lo que hay que entender de React antes de escribir una
+línea (sección 8) y cómo está organizado el código (sección 9). Acá no se repite nada de eso: cada
+vez que aparece un concepto, se te remite a la sección del plan donde está explicado. Si algo de
+este documento no coincide con `15-ESPECIFICACION-FRONT.md`, manda la especificación y se avisa al
+grupo.
+
+**El código de este documento sale directamente de las ramas verificadas** (lint, formato, build y
+prueba en el navegador contra el backend). No lo copies y pegues: escribilo leyendo la explicación,
+porque el profesor te puede preguntar por cualquier línea.
+
+## Tus tareas
+
+| # | Rama | Qué resuelve | Pantallas |
+|---|---|---|---|
+| 2 | `feat/session` | Login real de admin y paciente, sesión guardada, rutas protegidas y los dos menús | P1 y P9 |
+| 5 | `feat/doctor-availability` | Agenda semanal de un médico, mes por mes | P5 |
+| 6 | `feat/admin-dashboard` | Tablero del admin con totales reales y directorio de médicos | P2 |
+
+## Cuándo arranca cada una
+
+| Tarea | Qué tiene que estar mergeado antes | Mientras esperás |
+|---|---|---|
+| 2 | La tarea 1 de Matías (`chore/front-base`) | Leé la sección 8 del plan entera y esta tarea entera |
+| 5 | Las tareas 1 y 2 | Nada: arranca apenas se mergea tu tarea 2 |
+| 6 | Las tareas 1 y 2 | Se hace en paralelo con la 5 (salen del mismo punto) |
+
+Las tareas 5 y 6 salen del mismo `development` (con la 1 y la 2 mergeadas) que las tareas 3 y 4 de
+Matías y las 7 y 9 de Valentín, y se hacen **en paralelo** (plan, sección 2). Se mergean en el
+orden de la tabla del plan: `… 4 → 5 → 6 …`. Tu tarea 2 es la que destraba a todo el equipo: hasta
+que no está mergeada, nadie más puede arrancar.
+
+**Comandos para crear cada rama** (siempre después de confirmar en GitHub que lo que esperás ya
+está mergeado; plan, sección 7):
+
+| Tarea | Qué tiene que estar mergeado | Comandos |
+|---|---|---|
+| 2 | Tarea 1 | `git switch development` · `git pull` · `git switch -c feat/session` |
+| 5 | Tareas 1 y 2 | `git switch development` · `git pull` · `git switch -c feat/doctor-availability` |
+| 6 | Tareas 1 y 2 | `git switch development` · `git pull` · `git switch -c feat/admin-dashboard` |
+
+**Cómo leer los bloques de código:** está explicado en el plan, sección 1, punto 5 (Crear, Reemplazar todo, Modificar con
+bloques `diff`, Mover y Borrar). Los números de línea de los `diff`
+están medidos sobre `development` con las tareas que dice la columna "Sale de" de cada tarea, y
+nada más. Si tu rama sale de un `development` con más cosas mergeadas, los números se corren; el
+contexto de cada bloque te dice dónde va.
+
+---
+
+## Tarea 2 — Sesión, logins y rutas protegidas
+
+| | |
+|---|---|
+| **Responsable** | Nicolás |
+| **Rama** | `feat/session` |
+| **Sale de** | `development` con la tarea 1 mergeada |
+| **Pantallas / Referencia** | P1 (login de administrador) y P9 (login de paciente) · Sección 5 (sesión y autenticación) · 6.1, 6.4 y 6.6 (capa HTTP, errores y rate limiting) · 8 (mapa de rutas) · 10 (componentes) · 0.3, problemas B1 a B7 y B12 de `15-ESPECIFICACION-FRONT.md` |
+| **Archivos** | 22: 11 nuevos, 8 se modifican, 3 se borran |
+
+Escribilos **en este orden** (es el orden en que aparecen abajo, cada uno con su número):
+
+| # | Ruta completa | Qué hacer | Líneas |
+|---|---|---|---|
+| 1 | `src/modules/shared/constants/roles.js` | Crear | +16 −0 |
+| 2 | `src/modules/shared/api/sessionStore.js` | Crear | +51 −0 |
+| 3 | `src/modules/shared/api/axiosInstance.js` | Reemplazar todo | +45 −21 |
+| 4 | `src/modules/shared/hooks/useCooldown.js` | Crear | +25 −0 |
+| 5 | `src/modules/shared/components/templates/AuthLayout.jsx` | Crear | +25 −0 |
+| 6 | `src/modules/auth/services/authService.js` | Crear | +27 −0 |
+| 7 | `src/modules/auth/context/AuthProvider.jsx` | Reemplazar todo | +37 −59 |
+| 8 | `src/modules/auth/services/adminLogin.js` | Borrar | +0 −19 |
+| 9 | `src/modules/auth/services/patientLogin.js` | Borrar | +0 −19 |
+| 10 | `src/modules/auth/hooks/useAuthNotice.js` | Crear | +15 −0 |
+| 11 | `src/modules/auth/components/ProtectedRoute.jsx` | Modificar | +12 −6 |
+| 12 | `src/modules/auth/components/GuestRoute.jsx` | Crear | +16 −0 |
+| 13 | `src/modules/auth/components/AdminLoginForm.jsx` | Crear | +103 −0 |
+| 14 | `src/modules/auth/pages/AdminLoginPage.jsx` | Reemplazar todo | +65 −249 |
+| 15 | `src/modules/patients/components/PatientLoginForm.jsx` | Crear | +113 −0 |
+| 16 | `src/modules/patients/pages/PatientLoginPage.jsx` | Reemplazar todo | +47 −210 |
+| 17 | `src/modules/auth/helpers/backendError.js` | Borrar | +0 −6 |
+| 18 | `src/modules/dashboard/components/Sidebar.jsx` | Crear | +74 −0 |
+| 19 | `src/modules/dashboard/components/DashboardLayout.jsx` | Reemplazar todo | +25 −188 |
+| 20 | `src/modules/patients/components/PatientNavbar.jsx` | Crear | +116 −0 |
+| 21 | `src/modules/patients/components/PatientLayout.jsx` | Reemplazar todo | +10 −158 |
+| 22 | `src/router.jsx` | Modificar | +51 −42 |
+
+### Qué problema resuelve
+
+El login del boilerplate de la cátedra **no inicia una sesión de verdad**. Mirá lo que hace hoy
+`src/modules/auth/context/AuthProvider.jsx` en `development`:
+
+- Si escribís `admin` (o `admin@medportal.com`, o `admin@test.com`) con la contraseña `admin123`,
+  entra sin preguntarle nada al backend y guarda un token inventado: `'mock-admin-token-12345'`.
+  Lo mismo para el paciente con `paciente` / `paciente123` y `'mock-patient-token-67890'` (B1 de
+  la especificación). Con ese token, cualquier pedido al backend devuelve `401`.
+- Si no son esas credenciales, llama a `api/admin/auth/login` y `api/patient/auth/login` con
+  `{ username, password }`. Esos endpoints **no existen** en nuestro backend: los reales son
+  `POST /api/auth/admin/login` con `{ email, password }` y `POST /api/auth/patient/login` con
+  `{ email, dni, fullName }` (B2, sección 5.1). Y el paciente no tiene contraseña: se identifica
+  con email y DNI (B3).
+- Guarda **solo el token**, en `localStorage`. Se pierden el rol, el DNI y el `patientId`, que la
+  reserva de turnos necesita (B5). Para cerrar sesión hace `localStorage.clear()`, que borra todo
+  lo que haya guardado en el navegador, no solo la sesión.
+- **No hay roles.** `ProtectedRoute` solo mira si hay un token: un paciente logueado puede entrar a
+  `/admin` (B4).
+- Los mensajes de error se buscan en `auth/helpers/backendError.js` por códigos numéricos (`1000`,
+  `1002`) que nuestro backend no usa (B6).
+- Ante un `401`, `axiosInstance.js` solo reacciona si la URL tiene `/admin/`, y manda a `/login` (el
+  login del paciente) en vez de `/admin/login`. En la zona del paciente borra el token pero no
+  redirige (B7).
+- Las funciones se llaman `singinAdmin`, `singinPatient`, `singout`: errores de tipeo (B12).
+- Los menús muestran datos de ejemplo: "Admin User / Super Administrator" en el del admin y
+  "Johnathan Doe" en el del paciente, con una campanita de notificaciones que hace `alert()`.
+
+Sin una sesión real, ninguna pantalla puede llamar a un endpoint protegido. Por eso esta tarea va
+antes que todas las de pantallas.
+
+### Por qué así
+
+- **La sesión es un solo objeto `{ token, role, email, dni, patientId }`** (sección 5.2), armado
+  con lo que devuelve el login. El JWT **no se decodifica**: el backend devuelve `role`, `dni` y
+  `patientId` en la respuesta justamente para eso. El `email` es el que tipeó el usuario, para
+  mostrarlo en el menú.
+- **Se guarda en `sessionStorage`, no en `localStorage`** (sección 5.3). Las dos guardan texto en
+  el navegador con la misma forma de uso (`getItem`, `setItem`, `removeItem`). La diferencia es
+  cuánto dura: `localStorage` sobrevive aunque cierres el navegador; `sessionStorage` se borra
+  cuando cerrás la pestaña. En un centro médico es común compartir la computadora, así que
+  preferimos que cerrar la pestaña cierre la sesión. Un F5 (recargar) no la borra.
+- **Un solo archivo lee y escribe la sesión: `sessionStore.js`.** Así la clave
+  (`'medportal.session'`) está escrita en un solo lugar, y si un día se cambia de almacenamiento se
+  toca un solo archivo. Al cerrar sesión se borra **solo esa clave**, no todo.
+- **`readSession` descarta una sesión guardada sin token o con un rol desconocido.** Esto vino de
+  un error real que vimos al probar: una sesión vieja guardada en el navegador, con un rol que no
+  era ni `ADMINISTRADOR` ni `PACIENTE`, hacía que las guardas redirigieran para siempre (la guarda
+  del paciente decía "este no es paciente, mandalo a su inicio", su inicio no existía y volvía a
+  `/`, y así sin fin) y la página quedaba **en blanco**. Ahora una sesión que las guardas no
+  pueden ubicar se trata como "no hay sesión" y se ve el login.
+- **Los roles vienen del backend como `ADMINISTRADOR` y `PACIENTE`.** Se escriben una sola vez en
+  `shared/constants/roles.js`, junto con la página de inicio y el login de cada rol. Nadie escribe
+  `'ADMINISTRADOR'` a mano en otro archivo.
+- **El token se agrega en un solo lugar: el interceptor de request de `axiosInstance`** (sección
+  6.1). Ningún service tiene que acordarse de mandarlo.
+- **Un `401` se maneja en un solo lugar: el interceptor de response** (sección 5.6). Si llega un
+  `401` en cualquier llamada que **no** sea de login, la sesión ya no sirve (venció, falta o es
+  inválida): se borra, se deja un aviso y se vuelve al login de esa zona. Un `401` en un login, en
+  cambio, es "credenciales incorrectas" y lo muestra el formulario.
+- **El aviso ("Tu sesión expiró. Volvé a ingresar") se guarda en `sessionStorage` y lo muestra la
+  página de login una sola vez.** Hace falta guardarlo porque la vuelta al login recarga la página
+  entera (ver `axiosInstance.js`) y en una recarga se pierde todo lo que estaba en memoria.
+- **Dos guardas de rutas** (sección 5.5): `ProtectedRoute` (las páginas privadas: sin sesión → al
+  login de esa zona; con otro rol → al inicio de **su** rol) y `GuestRoute` (los logins: si ya
+  hay sesión, al inicio de su rol). Las dos dibujan un `<Outlet />` (plan, sección 8.9), así se
+  ponen una sola vez en `router.jsx` y protegen a todas sus rutas hijas.
+- **Después de un `429` el botón de ingresar queda deshabilitado 10 segundos** (`useCooldown`,
+  sección 6.4). El backend permite 5 logins de admin y 10 de paciente por minuto (sección 6.6);
+  el botón deshabilitado evita que el usuario siga tocando mientras está bloqueado.
+- **Patrón contenedor-presentacional en los logins.** El formulario (`AdminLoginForm`,
+  `PatientLoginForm`) solo dibuja y valida: no sabe que existe un backend. La página
+  (`AdminLoginPage`, `PatientLoginPage`) llama al login y decide qué mensaje mostrar. Es la regla
+  de capas del plan, sección 8.6.
+- **Dónde vive cada archivo** (plan, sección 9). Las dos reglas son: ninguna funcionalidad importa
+  de otra salvo de `auth`, y `shared/` no importa de ninguna funcionalidad.
+  - `sessionStore.js` y `roles.js` van en `shared/` y no en `auth/` porque los usa
+    `axiosInstance.js`, que está en `shared/api/`. Si estuvieran en `auth/`, `shared/` importaría de
+    una funcionalidad y se rompería la regla 2.
+  - `useCooldown.js` va en `shared/hooks/` porque lo usan los dos logins (uno en `auth/`, el otro en
+    `patients/`) y también la reserva de turnos de Valentín (tarea 7).
+  - `AuthLayout.jsx` va en `shared/components/templates/` porque es la plantilla de los dos logins
+    (sección 10, "Plantillas"), que viven en módulos distintos.
+  - **El login del paciente vive en `patients/`**, no en `auth/`: así lo ubica el boilerplate
+    (`PatientLoginPage.jsx`) y se conserva para que el profesor reconozca su base (sección 3.1). Lo
+    que comparten los dos logins (la sesión, el contexto y las guardas) vive en `auth/`, y
+    `patients/` lo puede importar porque `auth` es la excepción de la regla 1.
+  - **Los dos layouts se quedan donde los puso el boilerplate**: `DashboardLayout` en `dashboard/` y
+    `PatientLayout` en `patients/` (sección 10: "los usa un solo rol. Se dejan donde están"). Sus
+    menús, `Sidebar` y `PatientNavbar`, van al lado de su layout por la misma razón: cada uno lo usa
+    un solo rol, así que no hay nada que compartir y no tiene sentido llevarlos a `shared/`.
+- **El router queda ordenado para que las tareas 3, 4 y 5 no choquen.** Esas tres tareas se hacen
+  en paralelo y las tres agregan rutas al mismo archivo, `src/router.jsx`. Git marca un conflicto
+  cuando dos ramas cambian las mismas líneas o líneas pegadas. Por eso esta tarea reordena el
+  router a propósito:
+  - Las rutas hijas del admin quedan en este orden: `home`, `doctors`, `patients`, `specialties`.
+  - Los imports de los módulos quedan en este orden: `DoctorsPage`, `AppointmentsSearchPage`,
+    `SpecialtiesPage`.
+
+  Con ese orden, cada tarea inserta sus líneas en un lugar distinto, con al menos una línea sin
+  tocar en el medio:
+
+  | Tarea | Dónde inserta sus rutas | Dónde inserta su import |
+  |---|---|---|
+  | 5 (tuya) | entre `home` y `doctors` | después de `AppointmentsSearchPage` |
+  | 4 (Matías) | después de `doctors` | después de `DoctorsPage` |
+  | 3 (Matías) | después de `specialties` | después de `SpecialtiesPage` |
+
+  Se probó mergear las tres en orden y en orden inverso, y no hay conflictos. Si igual aparece uno
+  en `router.jsx`, la solución es quedarse con las dos partes (plan, sección 7).
+- **Se borran los archivos de auth del boilerplate**: `adminLogin.js` y `patientLogin.js` (con los
+  logins de prueba y los endpoints que no existen; los reemplaza `authService.js`) y
+  `helpers/backendError.js` (los códigos `1000` y `1002` que el backend no usa; ahora los mensajes
+  salen del `ApiError` de la tarea 1, plan sección 8.7). Dejarlos sería dejar código muerto que
+  alguien podría volver a usar por error.
+
+### Qué afecta
+
+- **Todas las tareas que siguen dependen de esta.** Sin el token en el interceptor, ninguna
+  pantalla puede llamar a un endpoint protegido. Las tareas 7 y 8 (Valentín) leen además
+  `session.dni` y `session.patientId` con `useAuth()` para reservar y listar turnos.
+- **Las tareas 3, 4 y 5** agregan sus rutas en los lugares que deja preparados el router (ver
+  arriba).
+- **Qué cambia para el usuario:** el admin entra con su email y contraseña reales; el paciente con
+  email y DNI (y el nombre, opcional); la primera vez que un paciente entra, el backend le crea la
+  cuenta. Recargar la página no cierra la sesión; cerrar la pestaña, sí. Un paciente que escribe
+  una URL de `/admin` termina en su propio inicio, y al revés. Los menús muestran el email (y el
+  DNI del paciente) de la sesión real.
+- **Qué NO se toca:** las páginas de contenido (`OverviewPage`, `DoctorsPage`, `SpecialtiesPage`,
+  `AppointmentsSearchPage`, `PatientHome`, `AppointmentsPage`) siguen con los datos de ejemplo del
+  boilerplate; las conectan las tareas 3 a 9. Tampoco se toca nada de `shared/components` salvo la
+  plantilla nueva `AuthLayout`, ni `apiError.js` (es de la tarea 1).
+
+### Código, archivo por archivo
+
+El orden es el de escritura: cada archivo solo importa archivos que ya están en `development` o
+que escribiste antes. Mientras no llegues a `router.jsx` (el último), la app puede no andar en el
+navegador: es normal, porque estás cambiando piezas que se usan entre sí.
+
+#### Archivo 1 de 22 · `roles.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (16 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/constants/` |
+| **Archivo** | `roles.js` |
+| **Ruta completa** | `src/modules/shared/constants/roles.js` |
+
+````js
+const ROLES = Object.freeze({
+  ADMIN: 'ADMINISTRADOR',
+  PATIENT: 'PACIENTE',
+});
+
+const HOME_PATH = Object.freeze({
+  [ROLES.ADMIN]: '/admin/home',
+  [ROLES.PATIENT]: '/',
+});
+
+const LOGIN_PATH = Object.freeze({
+  [ROLES.ADMIN]: '/admin/login',
+  [ROLES.PATIENT]: '/login',
+});
+
+export { ROLES, HOME_PATH, LOGIN_PATH };
+````
+
+**Qué hace y por qué:**
+
+Constantes: valores fijos que usa toda la app. No dibuja nada ni llama a nadie.
+
+- `ROLES` tiene los dos roles **tal como los manda el backend** en la respuesta del login:
+  `'ADMINISTRADOR'` y `'PACIENTE'`. En el código se escribe `ROLES.ADMIN`, nunca el texto.
+- `HOME_PATH` dice cuál es la página de inicio de cada rol: `/admin/home` para el admin y `/` para
+  el paciente.
+- `LOGIN_PATH` dice cuál es el login de cada rol: `/admin/login` y `/login`.
+- `[ROLES.ADMIN]: '/admin/home'` usa corchetes para que la **clave** del objeto sea el valor de
+  `ROLES.ADMIN` (o sea, `'ADMINISTRADOR'`). Así se puede preguntar `HOME_PATH[session.role]` con el
+  rol que vino del backend.
+- `Object.freeze` congela el objeto: nadie puede cambiarle un valor por error en otro archivo.
+
+Lo importan `sessionStore.js`, `axiosInstance.js`, las dos guardas, las dos páginas de login y el
+router.
+
+#### Archivo 2 de 22 · `sessionStore.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (51 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/api/` |
+| **Archivo** | `sessionStore.js` |
+| **Ruta completa** | `src/modules/shared/api/sessionStore.js` |
+
+````js
+// Single place that reads and writes the session in sessionStorage.
+// sessionStorage is cleared when the tab closes, which suits shared computers.
+import { ROLES } from '../constants/roles';
+
+const SESSION_KEY = 'medportal.session';
+const NOTICE_KEY = 'medportal.authNotice';
+const KNOWN_ROLES = Object.values(ROLES);
+
+// A stored session without a token or with an unknown role is discarded:
+// the route guards cannot place it and would redirect forever.
+function readSession() {
+  try {
+    const session = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+
+    return session?.token && KNOWN_ROLES.includes(session.role)
+      ? session
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(session) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
+// One-shot message shown by the login page after a forced logout (expired token).
+function setAuthNotice(message) {
+  sessionStorage.setItem(NOTICE_KEY, message);
+}
+
+function peekAuthNotice() {
+  return sessionStorage.getItem(NOTICE_KEY);
+}
+
+function clearAuthNotice() {
+  sessionStorage.removeItem(NOTICE_KEY);
+}
+
+export {
+  readSession,
+  saveSession,
+  clearSession,
+  setAuthNotice,
+  peekAuthNotice,
+  clearAuthNotice,
+};
+````
+
+**Qué hace y por qué:**
+
+El **único** archivo que lee y escribe la sesión en el navegador. No es React: son funciones
+comunes. Está en `shared/api/` porque lo usa `axiosInstance.js` (ver "Por qué así").
+
+- `SESSION_KEY` y `NOTICE_KEY` son los nombres con los que se guardan la sesión y el aviso.
+- `sessionStorage` solo guarda texto. Por eso `saveSession` convierte el objeto a texto con
+  `JSON.stringify`, y `readSession` lo vuelve a objeto con `JSON.parse`.
+- `readSession`:
+  - Si no hay nada guardado, `getItem` devuelve `null`, `JSON.parse(null)` da `null` y
+    `session?.token` da `undefined` (el `?.` evita el error de leer una propiedad de `null`).
+  - Solo devuelve la sesión si tiene `token` **y** su `role` está entre los conocidos
+    (`KNOWN_ROLES`, que es `['ADMINISTRADOR', 'PACIENTE']`). Si no, devuelve `null`: es el arreglo
+    del error de la página en blanco que se cuenta en "Por qué así".
+  - El `try/catch` cubre el caso de que alguien haya guardado algo que no es JSON válido:
+    `JSON.parse` tira un error, y en vez de romper la app se trata como "no hay sesión".
+- `clearSession` borra **solo** la clave de la sesión (el boilerplate hacía `localStorage.clear()`,
+  que borraba todo).
+- `setAuthNotice`, `peekAuthNotice` y `clearAuthNotice` guardan, leen y borran el aviso que se
+  muestra en el login después de un cierre de sesión forzado (sesión vencida).
+
+Lo importan `axiosInstance.js`, `AuthProvider.jsx` y `useAuthNotice.js`.
+
+#### Archivo 3 de 22 · `axiosInstance.js`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (39 líneas) y escribí este código (63 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/api/` |
+| **Archivo** | `axiosInstance.js` |
+| **Ruta completa** | `src/modules/shared/api/axiosInstance.js` |
+
+````js
+import axios from 'axios';
+import { ApiError } from './apiError';
+import { clearSession, readSession, setAuthNotice } from './sessionStore';
+import { LOGIN_PATH } from '../constants/roles';
+
+const LOGIN_URL_PREFIX = 'api/auth/';
+
+const instance = axios.create({
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+});
+
+instance.interceptors.request.use((config) => {
+  const session = readSession();
+
+  if (session?.token) {
+    config.headers.Authorization = `Bearer ${session.token}`;
+  }
+
+  return config;
+});
+
+function isLoginRequest(config) {
+  return (config?.url ?? '').replace(/^\//, '').startsWith(LOGIN_URL_PREFIX);
+}
+
+function loginPathFor(role) {
+  if (LOGIN_PATH[role]) {
+    return LOGIN_PATH[role];
+  }
+
+  return window.location.pathname.startsWith('/admin')
+    ? '/admin/login'
+    : '/login';
+}
+
+// Any 401 outside a login call means the session is missing or expired:
+// clear it and send the user to the login of their zone. A 401 on a login
+// call is just "wrong credentials" and is handled by the form.
+function handleUnauthorized(apiError) {
+  const role = readSession()?.role;
+  const expired = apiError.details.some((detail) => detail.issue === 'expired');
+
+  clearSession();
+  setAuthNotice(
+    expired ? 'Tu sesión expiró. Volvé a ingresar' : 'Tenés que iniciar sesión'
+  );
+  window.location.assign(loginPathFor(role));
+}
+
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const apiError = ApiError.fromAxiosError(error);
+
+    if (apiError.status === 401 && !isLoginRequest(error.config)) {
+      handleUnauthorized(apiError);
+    }
+
+    return Promise.reject(apiError);
+  }
+);
+
+export { instance };
+````
+
+**Qué hace y por qué:**
+
+El único archivo que habla con Axios (plan, sección 8.6). Lo creó el boilerplate y la tarea 1 le
+agregó el `ApiError`; esta tarea cambia de dónde sale el token y cómo se maneja el `401`.
+
+Un **interceptor** es una función que Axios ejecuta en **todos** los pedidos: el de request corre
+justo antes de mandar cada pedido, y el de response corre cuando llega cada respuesta (o error).
+Es la forma de hacer algo en todas las llamadas sin repetirlo en cada service.
+
+- **Interceptor de request** (líneas 12 a 20): lee la sesión con `readSession()` y, si hay token,
+  agrega el header `Authorization: Bearer <token>`. El boilerplate lo leía de `localStorage`.
+- `isLoginRequest(config)`: `config.url` es la URL relativa del pedido (por ejemplo
+  `'api/auth/admin/login'`). `.replace(/^\//, '')` le saca una barra inicial si la tuviera, y
+  `startsWith('api/auth/')` dice si es uno de los dos logins.
+- `loginPathFor(role)`: el login al que hay que volver. Si la sesión tenía un rol conocido, usa
+  `LOGIN_PATH`; si no (por ejemplo, ya no había sesión), lo decide por la URL actual: si empieza con
+  `/admin`, `/admin/login`; si no, `/login`. Esto corrige el B7.
+- `handleUnauthorized(apiError)` (sección 5.6):
+  1. Lee el rol **antes** de borrar la sesión (después ya no estaría).
+  2. Mira si en los `details` del error viene `issue: 'expired'` (el backend lo manda cuando el
+     token venció).
+  3. Borra la sesión y deja el aviso: "Tu sesión expiró. Volvé a ingresar" si venció, o "Tenés
+     que iniciar sesión" en los demás casos.
+  4. `window.location.assign(...)` navega al login **recargando la página entera**. No se usa
+     `navigate` de React Router porque este archivo no es un componente y los hooks como
+     `useNavigate` solo se pueden usar adentro de componentes (plan, sección 8.3). La recarga además
+     arranca la app de cero: `AuthProvider` vuelve a leer `sessionStorage`, ya vacío, y no queda
+     ningún dato de la sesión vieja en memoria.
+- **Interceptor de response** (líneas 50 a 61): la primera función deja pasar las respuestas buenas
+  sin tocarlas. La segunda recibe los errores: los convierte en `ApiError` (plan, sección 8.7) y,
+  si es un `401` que no vino de un login, llama a `handleUnauthorized`. Siempre termina con
+  `Promise.reject(apiError)`, así quien hizo el pedido recibe el error en su `catch`.
+
+Lo importan todos los services del proyecto.
+
+#### Archivo 4 de 22 · `useCooldown.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (25 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `useCooldown.js` |
+| **Ruta completa** | `src/modules/shared/hooks/useCooldown.js` |
+
+````js
+import { useCallback, useEffect, useState } from 'react';
+
+const DEFAULT_SECONDS = 10;
+
+// After a 429 the button that caused it stays disabled for a few seconds
+// (spec 6.4). `start()` opens the wait; `active` is true until it ends.
+function useCooldown(seconds = DEFAULT_SECONDS) {
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => setActive(false), seconds * 1000);
+
+    return () => clearTimeout(timer);
+  }, [active, seconds]);
+
+  const start = useCallback(() => setActive(true), []);
+
+  return { active, start };
+}
+
+export default useCooldown;
+````
+
+**Qué hace y por qué:**
+
+Un hook propio (plan, sección 8.5) que maneja una espera: "deshabilitá este botón durante 10
+segundos". Lo usan los dos logins después de un `429` (sección 6.4) y, más adelante, la reserva de
+turnos.
+
+- `active` es el estado: `true` mientras dura la espera.
+- El `useEffect` (plan, sección 8.4) corre cada vez que cambia `active`. Si `active` es `true`,
+  arranca un temporizador (`setTimeout`) que lo vuelve a `false` a los `seconds * 1000`
+  milisegundos. La función de limpieza (`clearTimeout`) cancela el temporizador si el componente
+  desaparece antes, para que no intente cambiar el estado de un componente que ya no está.
+- `start` es la función que abre la espera. Está envuelta en `useCallback`: `useCallback` devuelve
+  **la misma función** en cada dibujado en vez de crear una nueva. Así, si algún efecto la pone en
+  sus dependencias, no se repite sin necesidad.
+- Devuelve `{ active, start }`.
+
+#### Archivo 5 de 22 · `AuthLayout.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (25 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/templates/` |
+| **Archivo** | `AuthLayout.jsx` |
+| **Ruta completa** | `src/modules/shared/components/templates/AuthLayout.jsx` |
+
+````jsx
+import Icon from '../atoms/Icon';
+
+// Brand header + centered card shared by both login pages.
+function AuthLayout({ children, footer }) {
+  return (
+    <main className="min-h-screen flex flex-col justify-center items-center bg-med-primary-950 px-4 py-8 sm:p-6">
+      <div className="flex flex-col items-center mb-8">
+        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg mb-3">
+          <Icon name="shield" className="w-8 h-8 text-med-primary-900" />
+        </div>
+        <h1 className="text-3xl font-semibold tracking-tight text-white">
+          MedPortal
+        </h1>
+      </div>
+
+      <section className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-white/10">
+        {children}
+      </section>
+
+      {footer && <div className="mt-6 text-center">{footer}</div>}
+    </main>
+  );
+}
+
+export default AuthLayout;
+````
+
+**Qué hace y por qué:**
+
+La **plantilla** de los dos logins (Atomic Design, plan sección 9): el fondo azul, el logo con el
+escudo, el título "MedPortal" y la tarjeta blanca centrada. El boilerplate repetía todo esto,
+íntegro, en `AdminLoginPage` y en `PatientLoginPage`.
+
+- `children` es lo que va adentro de la tarjeta (cada página pone su formulario).
+- `footer` es opcional: lo que va debajo de la tarjeta (el enlace al otro login). Se dibuja solo si
+  viene (`{footer && ...}`, plan sección 8.2).
+- `px-4 py-8 sm:p-6`: en el celular, 16 px a los costados y 32 arriba y abajo; desde 640 px
+  (`sm:`), 24 px en todos lados (plan, sección 8.10).
+- `w-full max-w-md`: la tarjeta ocupa todo el ancho disponible pero nunca más de 448 px. Así a
+  360 px entra entera y en la computadora no queda gigante.
+- `<Icon name="shield" />` reemplaza el SVG de 10 líneas que el boilerplate copiaba en cada página.
+
+#### Archivo 6 de 22 · `authService.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (27 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/auth/services/` |
+| **Archivo** | `authService.js` |
+| **Ruta completa** | `src/modules/auth/services/authService.js` |
+
+````js
+import { instance } from '../../shared/api/axiosInstance';
+
+// POST /api/auth/admin/login -> { token, role }
+async function loginAdmin({ email, password }) {
+  const response = await instance.post('api/auth/admin/login', {
+    email,
+    password,
+  });
+
+  return response.data;
+}
+
+// POST /api/auth/patient/login -> { token, role, dni, patientId }
+// dni travels as a number; fullName is sent only when present.
+async function loginPatient({ email, dni, fullName }) {
+  const body = { email, dni: Number(dni) };
+
+  if (fullName) {
+    body.fullName = fullName;
+  }
+
+  const response = await instance.post('api/auth/patient/login', body);
+
+  return response.data;
+}
+
+export { loginAdmin, loginPatient };
+````
+
+**Qué hace y por qué:**
+
+La capa **service** (plan, sección 8.6): una función por endpoint. No sabe nada de React. Reemplaza
+a `adminLogin.js` y `patientLogin.js`.
+
+- `loginAdmin({ email, password })` llama a `POST /api/auth/admin/login` y devuelve
+  `response.data`, que es `{ token, role }` (sección 5.1).
+- `loginPatient({ email, dni, fullName })` llama a `POST /api/auth/patient/login`:
+  - `dni: Number(dni)`: el formulario tiene el DNI como texto, pero el backend lo espera como
+    **número** (sección 5.1).
+  - `fullName` se agrega al cuerpo **solo si tiene algo** (P9, flujo, paso 1). Así un paciente que
+    ya existe y deja el nombre vacío no manda un nombre vacío.
+  - Devuelve `{ token, role, dni, patientId }`.
+- No hay `try/catch`: si falla, el interceptor ya convirtió el error en `ApiError` y la función lo
+  deja subir para que lo maneje la página.
+
+#### Archivo 7 de 22 · `AuthProvider.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (85 líneas) y escribí este código (63 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/auth/context/` |
+| **Archivo** | `AuthProvider.jsx` |
+| **Ruta completa** | `src/modules/auth/context/AuthProvider.jsx` |
+
+````jsx
+import { createContext, useState } from 'react';
+import * as authService from '../services/authService';
+import {
+  clearSession,
+  readSession,
+  saveSession,
+} from '../../shared/api/sessionStore';
+
+const AuthContext = createContext(null);
+
+function AuthProvider({ children }) {
+  // Read on mount so a page reload keeps the user logged in.
+  const [session, setSession] = useState(readSession);
+
+  const startSession = (newSession) => {
+    saveSession(newSession);
+    setSession(newSession);
+
+    return newSession;
+  };
+
+  // Errors propagate as ApiError so each login form decides what to show.
+  const loginAdmin = async ({ email, password }) => {
+    const data = await authService.loginAdmin({ email, password });
+
+    return startSession({ token: data.token, role: data.role, email });
+  };
+
+  const loginPatient = async ({ email, dni, fullName }) => {
+    const data = await authService.loginPatient({ email, dni, fullName });
+
+    return startSession({
+      token: data.token,
+      role: data.role,
+      email,
+      dni: data.dni,
+      patientId: data.patientId,
+    });
+  };
+
+  // ProtectedRoute sends the user to the login of the zone they were in.
+  const logout = () => {
+    clearSession();
+    setSession(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        session,
+        isAuthenticated: Boolean(session),
+        role: session?.role ?? null,
+        loginAdmin,
+        loginPatient,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export { AuthProvider, AuthContext };
+````
+
+**Qué hace y por qué:**
+
+El **contexto** de la sesión. Un contexto es la forma que tiene React de compartir un dato con
+todos los componentes sin pasarlo de padre a hijo por props. `AuthProvider` envuelve toda la app
+(lo hace `App.jsx`, que no cambia) y cualquier componente lee la sesión con `useAuth()` (el hook que
+ya está en `auth/hooks/useAuth.js`). Se reescribe casi entero.
+
+- `useState(readSession)`: se le pasa la **función** `readSession`, sin paréntesis. React la llama
+  una sola vez, en el primer dibujado, para obtener el valor inicial. Es lo que hace que un F5 no
+  te desloguee: al recargar, la sesión se vuelve a leer de `sessionStorage` (sección 5.4).
+- `startSession(newSession)` guarda la sesión en `sessionStorage` y en el estado (para que React
+  vuelva a dibujar todo lo que depende de ella).
+- `loginAdmin` y `loginPatient` llaman al service y arman el objeto de sesión de la sección 5.2.
+  Fijate que el `email` sale de lo que escribió el usuario, no de la respuesta. Si el login falla,
+  el `ApiError` sube a la página, que decide qué mensaje mostrar.
+- `logout` borra la sesión de `sessionStorage` y del estado. No navega: lo hace quien lo llama (los
+  layouts).
+- `value` es lo que reciben los componentes con `useAuth()`: `session`, `isAuthenticated`, `role`,
+  `loginAdmin`, `loginPatient` y `logout` (sección 5.4). Reemplazan a `singinAdmin`,
+  `singinPatient`, `singout` y `setAuthSession` del boilerplate (B12).
+- `import * as authService` trae todas las funciones del service con un prefijo (`authService.loginAdmin`).
+  Hace falta porque las funciones del contexto se llaman igual que las del service.
+
+#### Archivo 8 de 22 · `adminLogin.js`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/auth/services/adminLogin.js` |
+|---|---|
+| **Carpeta** | `src/modules/auth/services/` |
+| **Archivo** | `adminLogin.js` |
+| **Ruta completa** | `src/modules/auth/services/adminLogin.js` |
+
+**Qué hace y por qué:**
+
+El login de admin del boilerplate: tenía las credenciales de prueba y llamaba a un endpoint que no
+existe. Ya nadie lo importa (lo reemplazó `authService.js`), así que se borra.
+
+#### Archivo 9 de 22 · `patientLogin.js`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/auth/services/patientLogin.js` |
+|---|---|
+| **Carpeta** | `src/modules/auth/services/` |
+| **Archivo** | `patientLogin.js` |
+| **Ruta completa** | `src/modules/auth/services/patientLogin.js` |
+
+**Qué hace y por qué:**
+
+Lo mismo para el paciente: credenciales de prueba, usuario y contraseña, y un endpoint que no
+existe. Se borra.
+
+#### Archivo 10 de 22 · `useAuthNotice.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (15 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/auth/hooks/` |
+| **Archivo** | `useAuthNotice.js` |
+| **Ruta completa** | `src/modules/auth/hooks/useAuthNotice.js` |
+
+````js
+import { useEffect, useState } from 'react';
+import { clearAuthNotice, peekAuthNotice } from '../../shared/api/sessionStore';
+
+// Message left by the HTTP layer after a forced logout. Shown once.
+function useAuthNotice() {
+  const [notice] = useState(peekAuthNotice);
+
+  useEffect(() => {
+    clearAuthNotice();
+  }, []);
+
+  return notice;
+}
+
+export default useAuthNotice;
+````
+
+**Qué hace y por qué:**
+
+Hook propio que lee el aviso que dejó `axiosInstance` antes de mandar al login ("Tu sesión expiró.
+Volvé a ingresar") y lo muestra **una sola vez**.
+
+- `useState(peekAuthNotice)`: igual que en `AuthProvider`, lee el aviso una sola vez, al montar la
+  página. Se escribe `const [notice] = ...` porque nunca se cambia: solo se lee.
+- El `useEffect` con dependencias `[]` corre una sola vez, después del primer dibujado, y borra el
+  aviso de `sessionStorage`. El valor ya quedó guardado en el estado, así que se sigue viendo; pero
+  si recargás la página, ya no aparece.
+
+Lo usan las dos páginas de login.
+
+#### Archivo 11 de 22 · `ProtectedRoute.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/auth/components/` |
+| **Archivo** | `ProtectedRoute.jsx` |
+| **Ruta completa** | `src/modules/auth/components/ProtectedRoute.jsx` |
+
+**Líneas 1 a 20** (en el archivo ya modificado):
+
+````diff
+@@ -1,14 +1,20 @@
+-import { Navigate } from 'react-router-dom';
++import { Navigate, Outlet } from 'react-router-dom';
+ import useAuth from '../hooks/useAuth';
++import { HOME_PATH, LOGIN_PATH } from '../../shared/constants/roles';
+ 
+-function ProtectedRoute({ children, redirectTo = '/login' }) {
+-  const { isAuthenticated } = useAuth();
++// No session: login of this zone. Another role: home of that role.
++function ProtectedRoute({ role }) {
++  const { session } = useAuth();
+ 
+-  if (!isAuthenticated) {
+-    return <Navigate to={redirectTo} replace />;
++  if (!session) {
++    return <Navigate to={LOGIN_PATH[role]} replace />;
+   }
+ 
+-  return children;
++  if (session.role !== role) {
++    return <Navigate to={HOME_PATH[session.role] ?? '/'} replace />;
++  }
++
++  return <Outlet />;
+ }
+ 
+ export default ProtectedRoute;
+````
+
+**Qué hace y por qué:**
+
+La guarda de las rutas privadas (plan, sección 8.9; especificación, sección 5.5). Cambia de forma:
+antes envolvía a un hijo (`<ProtectedRoute><DashboardLayout /></ProtectedRoute>`) y miraba solo si
+había token; ahora recibe el **rol** permitido y se usa como ruta padre.
+
+- Prop `role`: el rol que puede entrar (`ROLES.ADMIN` o `ROLES.PATIENT`).
+- Sin sesión → `<Navigate to={LOGIN_PATH[role]} replace />`: va al login de **esa zona**.
+- Sesión de otro rol → al inicio de **su** rol (`HOME_PATH[session.role]`). El `?? '/'` es por si
+  acaso: si el rol no estuviera en la tabla, va a `/`. Con `readSession` filtrando roles
+  desconocidos, no debería pasar.
+- Rol correcto → `<Outlet />`: el lugar donde React Router dibuja la ruta hija que coincide con la
+  URL.
+- `<Navigate ... replace />` cambia de URL **reemplazando** la entrada actual del historial en vez
+  de agregar una. Si no tuviera `replace`, al tocar "Atrás" en el navegador volverías a la URL
+  protegida, que te volvería a redirigir, y quedarías atrapado.
+
+#### Archivo 12 de 22 · `GuestRoute.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (16 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/auth/components/` |
+| **Archivo** | `GuestRoute.jsx` |
+| **Ruta completa** | `src/modules/auth/components/GuestRoute.jsx` |
+
+````jsx
+import { Navigate, Outlet } from 'react-router-dom';
+import useAuth from '../hooks/useAuth';
+import { HOME_PATH } from '../../shared/constants/roles';
+
+// Login routes: with an active session, go to the home of the user's role.
+function GuestRoute() {
+  const { session } = useAuth();
+
+  if (session) {
+    return <Navigate to={HOME_PATH[session.role] ?? '/'} replace />;
+  }
+
+  return <Outlet />;
+}
+
+export default GuestRoute;
+````
+
+**Qué hace y por qué:**
+
+La guarda inversa, para los dos logins (sección 5.5: "las rutas de login hacen lo inverso"). Si ya
+hay sesión, no tiene sentido mostrar el login: te manda al inicio de tu rol. Si no hay sesión,
+dibuja el `<Outlet />`, o sea, la página de login.
+
+#### Archivo 13 de 22 · `AdminLoginForm.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (103 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/auth/components/` |
+| **Archivo** | `AdminLoginForm.jsx` |
+| **Ruta completa** | `src/modules/auth/components/AdminLoginForm.jsx` |
+
+````jsx
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import Button from '../../shared/components/atoms/Button';
+import Icon from '../../shared/components/atoms/Icon';
+import Input from '../../shared/components/atoms/Input';
+import Alert from '../../shared/components/molecules/Alert';
+import FormField from '../../shared/components/molecules/FormField';
+import { EMAIL_PATTERN, trimValue } from '../../shared/utils/formErrors';
+
+// Presentational: validates and hands { email, password } to onSubmit.
+// onSubmit receives setError so the container can map backend 400 details.
+// `blocked` keeps the button disabled during the wait after a 429.
+function AdminLoginForm({ onSubmit, errorMessage, notice, blocked = false }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    mode: 'onTouched',
+    defaultValues: { email: '', password: '' },
+  });
+
+  const submit = (values) => onSubmit(values, setError);
+  const toggleLabel = showPassword
+    ? 'Ocultar contraseña'
+    : 'Mostrar contraseña';
+
+  return (
+    <form
+      onSubmit={handleSubmit(submit)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
+      {notice && <Alert tone="info">{notice}</Alert>}
+      {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
+
+      <FormField
+        id="admin-email"
+        label="Correo electrónico"
+        error={errors.email?.message}
+      >
+        <Input
+          type="email"
+          icon="mail"
+          autoComplete="email"
+          placeholder="nombre@ejemplo.com"
+          {...register('email', {
+            setValueAs: trimValue,
+            required: 'Ingresá tu correo electrónico',
+            pattern: {
+              value: EMAIL_PATTERN,
+              message: 'El correo electrónico no es válido',
+            },
+          })}
+        />
+      </FormField>
+
+      <FormField
+        id="admin-password"
+        label="Contraseña"
+        error={errors.password?.message}
+      >
+        <Input
+          type={showPassword ? 'text' : 'password'}
+          icon="lock"
+          autoComplete="current-password"
+          placeholder="••••••••"
+          endAdornment={
+            <button
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+              aria-label={toggleLabel}
+              title={toggleLabel}
+              className="min-w-11 min-h-11 flex items-center justify-center text-med-text-muted hover:text-med-text-main"
+            >
+              <Icon name={showPassword ? 'eyeOff' : 'eye'} />
+            </button>
+          }
+          {...register('password', {
+            required: 'Ingresá tu contraseña',
+            minLength: {
+              value: 8,
+              message: 'La contraseña debe tener al menos 8 caracteres',
+            },
+          })}
+        />
+      </FormField>
+
+      <Button
+        type="submit"
+        loading={isSubmitting}
+        disabled={blocked}
+        className="mt-2 w-full min-h-11"
+      >
+        Iniciar Sesión →
+      </Button>
+    </form>
+  );
+}
+
+export default AdminLoginForm;
+````
+
+**Qué hace y por qué:**
+
+El formulario del login del admin (P1). Es **presentacional**: valida y le pasa los datos a la
+página, pero no llama al backend. Usa React Hook Form (plan, sección 8.8).
+
+- Props: `onSubmit` (lo que hay que hacer con los datos), `errorMessage` (el error general, arriba
+  del formulario), `notice` (el aviso de sesión vencida) y `blocked` (deshabilita el botón durante
+  la espera después de un `429`).
+- `useForm({ mode: 'onTouched', defaultValues })`: los errores aparecen al salir del campo.
+  `isSubmitting` es `true` mientras se espera la respuesta de `onSubmit`; con eso el botón muestra
+  el spinner y se deshabilita (sección 6.6: evita el doble envío).
+- `submit = (values) => onSubmit(values, setError)`: además de los valores, le pasa a la página la
+  función `setError`, para que la página pueda poner debajo de un campo un error que vino del
+  backend (sección 11.2).
+- `noValidate` en el `<form>` apaga la validación propia del navegador (los globitos que aparecen
+  con `type="email"`), para que se vean solo los mensajes nuestros.
+- Email: `setValueAs: trimValue` le saca los espacios de los costados antes de validar (sección
+  11.2); `required` y `pattern` con `EMAIL_PATTERN` (los dos vienen de
+  `shared/utils/formErrors.js`, tarea 1). Mensajes de la tabla 11.1: "Ingresá tu correo
+  electrónico" y "El correo electrónico no es válido".
+- Contraseña: obligatoria ("Ingresá tu contraseña") y de al menos 8 caracteres ("La contraseña
+  debe tener al menos 8 caracteres"). No se le hace `trim`: un espacio puede ser parte de la
+  contraseña.
+- El botón del ojo: `showPassword` cambia el `type` del campo entre `'password'` y `'text'`. Es un
+  botón que solo tiene un ícono, así que lleva `aria-label` (el texto que lee un lector de pantalla:
+  "Mostrar contraseña" u "Ocultar contraseña") y `title` (el cartelito al pasar el mouse) (sección
+  12.4). `type="button"` evita que al tocarlo se envíe el formulario. `min-w-11 min-h-11` le da los
+  44 px mínimos para tocarlo con el dedo.
+- `setShowPassword((value) => !value)`: cuando el nuevo valor depende del anterior, se le pasa una
+  función que recibe el valor actual.
+
+#### Archivo 14 de 22 · `AdminLoginPage.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (275 líneas) y escribí este código (91 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/auth/pages/` |
+| **Archivo** | `AdminLoginPage.jsx` |
+| **Ruta completa** | `src/modules/auth/pages/AdminLoginPage.jsx` |
+
+````jsx
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import AdminLoginForm from '../components/AdminLoginForm';
+import useAuth from '../hooks/useAuth';
+import useAuthNotice from '../hooks/useAuthNotice';
+import Icon from '../../shared/components/atoms/Icon';
+import AuthLayout from '../../shared/components/templates/AuthLayout';
+import { HOME_PATH, ROLES } from '../../shared/constants/roles';
+import useCooldown from '../../shared/hooks/useCooldown';
+import { applyFieldErrors } from '../../shared/utils/formErrors';
+
+const WRONG_CREDENTIALS = 'Usuario o contraseña incorrectos';
+const FIELD_MESSAGES = {
+  email: 'El correo electrónico no es válido',
+  password: 'La contraseña debe tener al menos 8 caracteres',
+};
+
+function AdminLoginPage() {
+  const [errorMessage, setErrorMessage] = useState('');
+  const notice = useAuthNotice();
+  const navigate = useNavigate();
+  const { loginAdmin } = useAuth();
+  const cooldown = useCooldown();
+
+  const handleSubmit = async (values, setError) => {
+    setErrorMessage('');
+
+    try {
+      await loginAdmin(values);
+      navigate(HOME_PATH[ROLES.ADMIN], { replace: true });
+    } catch (error) {
+      if (error.status === 429) {
+        cooldown.start();
+      }
+
+      if (error.status === 401) {
+        setErrorMessage(WRONG_CREDENTIALS);
+      } else if (!applyFieldErrors(error, setError, FIELD_MESSAGES)) {
+        setErrorMessage(error.message);
+      }
+    }
+  };
+
+  return (
+    <AuthLayout
+      footer={
+        <Link
+          to="/login"
+          className="inline-flex items-center min-h-11 text-xs text-med-primary-200 hover:text-white transition"
+        >
+          ← Volver al Portal de Pacientes
+        </Link>
+      }
+    >
+      <div className="p-6 sm:p-10">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-med-primary-900">
+            Bienvenido de nuevo
+          </h2>
+          <p className="text-xs text-med-text-sub mt-1 leading-relaxed">
+            Por favor, autentíquese para acceder al portal de proveedores.
+          </p>
+        </div>
+
+        <AdminLoginForm
+          onSubmit={handleSubmit}
+          errorMessage={errorMessage}
+          notice={notice}
+          blocked={cooldown.active}
+        />
+      </div>
+
+      <div className="bg-med-primary-50 border-t border-med-primary-100 p-4 sm:p-5 flex items-start gap-3">
+        <Icon
+          name="shield"
+          className="w-5 h-5 text-med-primary-600 shrink-0 mt-0.5"
+        />
+        <p className="text-xs text-med-text-sub leading-relaxed">
+          <strong className="text-med-text-main font-semibold">
+            Solo Acceso Seguro:
+          </strong>{' '}
+          Este sistema es para personal médico autorizado. Los intentos de
+          acceso no autorizados son registrados y monitoreados para su
+          cumplimiento.
+        </p>
+      </div>
+    </AuthLayout>
+  );
+}
+
+export default AdminLoginPage;
+````
+
+**Qué hace y por qué:**
+
+La página `/admin/login` (P1). Es el **contenedor**: usa `AuthLayout` y `AdminLoginForm`, llama al
+login y decide qué mostrar. Se reemplaza entera: el boilerplate tenía todo el formulario, los SVG y
+la marca escritos adentro.
+
+- `handleSubmit(values, setError)`:
+  1. Limpia el error anterior.
+  2. Llama a `loginAdmin(values)`. Si sale bien, navega a `/admin/home` con `replace: true` (para que
+     "Atrás" no vuelva al login).
+  3. Si falla, mira `error.status` (el `ApiError` de la tarea 1):
+     - `429`: arranca la espera (`cooldown.start()`), y además cae en la última rama, que muestra
+       el mensaje del `ApiError`: "Demasiadas solicitudes. Intentá de nuevo en un minuto".
+     - `401`: "Usuario o contraseña incorrectos" (P1, flujo, paso 3). No se dice cuál de los dos
+       falló.
+     - `400` con `details` de `email` o `password`: `applyFieldErrors` pone el error debajo del
+       campo, con los textos de `FIELD_MESSAGES`, y devuelve `true`.
+     - Cualquier otro caso (incluido el `0`, backend apagado: "No se pudo conectar con el
+       servidor"): el `message` del `ApiError` arriba del formulario.
+- El texto "Solo Acceso Seguro..." se mantiene del boilerplate (P1, diferencias con el mockup).
+- El enlace "← Volver al Portal de Pacientes" usa `<Link>` de React Router: cambia de pantalla sin
+  recargar la página. `min-h-11` lo hace tocable.
+
+#### Archivo 15 de 22 · `PatientLoginForm.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (113 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/patients/components/` |
+| **Archivo** | `PatientLoginForm.jsx` |
+| **Ruta completa** | `src/modules/patients/components/PatientLoginForm.jsx` |
+
+````jsx
+import { useForm } from 'react-hook-form';
+import Button from '../../shared/components/atoms/Button';
+import Input from '../../shared/components/atoms/Input';
+import Alert from '../../shared/components/molecules/Alert';
+import FormField from '../../shared/components/molecules/FormField';
+import { EMAIL_PATTERN, trimValue } from '../../shared/utils/formErrors';
+
+const INVALID_EMAIL = 'El correo electrónico no es válido';
+
+// Presentational: validates and hands { email, dni, fullName } to onSubmit.
+// `blocked` keeps the button disabled during the wait after a 429.
+function PatientLoginForm({ onSubmit, errorMessage, notice, blocked = false }) {
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    mode: 'onTouched',
+    defaultValues: { email: '', dni: '', fullName: '' },
+  });
+
+  const submit = (values) => onSubmit(values, setError);
+
+  return (
+    <form
+      onSubmit={handleSubmit(submit)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
+      {notice && <Alert tone="info">{notice}</Alert>}
+      {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
+
+      <FormField
+        id="patient-email"
+        label="Correo electrónico"
+        required
+        error={errors.email?.message}
+      >
+        <Input
+          type="email"
+          icon="mail"
+          autoComplete="email"
+          placeholder="nombre@ejemplo.com"
+          {...register('email', {
+            setValueAs: trimValue,
+            required: INVALID_EMAIL,
+            pattern: { value: EMAIL_PATTERN, message: INVALID_EMAIL },
+          })}
+        />
+      </FormField>
+
+      <FormField
+        id="patient-dni"
+        label="DNI"
+        required
+        error={errors.dni?.message}
+      >
+        <Input
+          type="text"
+          inputMode="numeric"
+          icon="idCard"
+          autoComplete="off"
+          placeholder="12345678"
+          maxLength={8}
+          {...register('dni', {
+            setValueAs: trimValue,
+            required: 'El DNI debe tener 7 u 8 dígitos',
+            pattern: {
+              value: /^\d{7,8}$/,
+              message: 'El DNI debe tener 7 u 8 dígitos',
+            },
+          })}
+        />
+      </FormField>
+
+      <FormField
+        id="patient-full-name"
+        label="Nombre y apellido (opcional)"
+        error={errors.fullName?.message}
+      >
+        <Input
+          type="text"
+          icon="user"
+          autoComplete="name"
+          placeholder="Juan Pérez"
+          {...register('fullName', {
+            setValueAs: trimValue,
+            validate: (value) =>
+              !value ||
+              (value.length >= 3 && value.length <= 150) ||
+              'El nombre debe tener entre 3 y 150 caracteres',
+          })}
+        />
+      </FormField>
+
+      <p className="text-xs text-med-text-sub">
+        Si es tu primera vez, tu cuenta se crea automáticamente al ingresar.
+      </p>
+
+      <Button
+        type="submit"
+        loading={isSubmitting}
+        disabled={blocked}
+        className="w-full min-h-11"
+      >
+        Ingresar
+      </Button>
+    </form>
+  );
+}
+
+export default PatientLoginForm;
+````
+
+**Qué hace y por qué:**
+
+El formulario del login del paciente (P9). Misma idea que `AdminLoginForm`, pero con los campos de
+la sección 5.1: email, DNI y nombre (opcional). No hay contraseña (B3).
+
+- Email: obligatorio y con formato. Los dos casos muestran "El correo electrónico no es válido"
+  (tabla 11.1, fila P9).
+- DNI:
+  - `type="text"` con `inputMode="numeric"`: en el celular abre el teclado numérico. No se usa
+    `type="number"` porque acepta `e`, `+` y `-`, y cambia el valor con la rueda del mouse (P9,
+    diferencias con el mockup).
+  - `maxLength={8}` no deja escribir más de 8 caracteres.
+  - `pattern: /^\d{7,8}$/`: solo dígitos, entre 7 y 8 (sección 11.3). Mensaje: "El DNI debe tener 7
+    u 8 dígitos".
+- Nombre y apellido: `validate` es una regla propia. Devuelve `true` si el campo está vacío (es
+  opcional) o si tiene entre 3 y 150 caracteres; si no, devuelve el mensaje "El nombre debe tener
+  entre 3 y 150 caracteres".
+- El texto de ayuda "Si es tu primera vez, tu cuenta se crea automáticamente al ingresar." es el
+  de la ficha P9: no hay pantalla de registro.
+- `required` en `FormField` dibuja la marca de obligatorio en la etiqueta (componente de la tarea 1).
+
+Está en `patients/components/` porque el login del paciente vive en `patients/` (ver "Por qué así").
+
+#### Archivo 16 de 22 · `PatientLoginPage.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (240 líneas) y escribí este código (77 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/patients/pages/` |
+| **Archivo** | `PatientLoginPage.jsx` |
+| **Ruta completa** | `src/modules/patients/pages/PatientLoginPage.jsx` |
+
+````jsx
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import PatientLoginForm from '../components/PatientLoginForm';
+import useAuth from '../../auth/hooks/useAuth';
+import useAuthNotice from '../../auth/hooks/useAuthNotice';
+import AuthLayout from '../../shared/components/templates/AuthLayout';
+import { HOME_PATH, ROLES } from '../../shared/constants/roles';
+import useCooldown from '../../shared/hooks/useCooldown';
+import { applyFieldErrors } from '../../shared/utils/formErrors';
+
+const NOT_MATCHING =
+  'El email y el DNI no coinciden con un paciente registrado.';
+const FIELD_MESSAGES = {
+  email: 'El correo electrónico no es válido',
+  dni: 'El DNI debe tener 7 u 8 dígitos',
+  fullName: 'El nombre debe tener entre 3 y 150 caracteres',
+};
+
+function PatientLoginPage() {
+  const [errorMessage, setErrorMessage] = useState('');
+  const notice = useAuthNotice();
+  const navigate = useNavigate();
+  const { loginPatient } = useAuth();
+  const cooldown = useCooldown();
+
+  const handleSubmit = async (values, setError) => {
+    setErrorMessage('');
+
+    try {
+      await loginPatient(values);
+      navigate(HOME_PATH[ROLES.PATIENT], { replace: true });
+    } catch (error) {
+      if (error.status === 429) {
+        cooldown.start();
+      }
+
+      if (error.status === 401) {
+        setErrorMessage(NOT_MATCHING);
+      } else if (!applyFieldErrors(error, setError, FIELD_MESSAGES)) {
+        setErrorMessage(error.message);
+      }
+    }
+  };
+
+  return (
+    <AuthLayout
+      footer={
+        <Link
+          to="/admin/login"
+          className="inline-flex items-center min-h-11 text-xs text-med-primary-200 hover:text-white transition"
+        >
+          ¿Es personal administrativo o médico? Ingrese aquí →
+        </Link>
+      }
+    >
+      <div className="p-6 sm:p-10">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-med-primary-900">
+            Portal del Paciente
+          </h2>
+          <p className="text-xs text-med-text-sub mt-1 leading-relaxed">
+            Inicia sesión para reservar y consultar tus turnos médicos
+          </p>
+        </div>
+
+        <PatientLoginForm
+          onSubmit={handleSubmit}
+          errorMessage={errorMessage}
+          notice={notice}
+          blocked={cooldown.active}
+        />
+      </div>
+    </AuthLayout>
+  );
+}
+
+export default PatientLoginPage;
+````
+
+**Qué hace y por qué:**
+
+La página `/login` (P9). Igual que `AdminLoginPage`, con estas diferencias:
+
+- Llama a `loginPatient` y, si sale bien, va a `/` (`HOME_PATH[ROLES.PATIENT]`).
+- El `401` muestra "El email y el DNI no coinciden con un paciente registrado." (P9, flujo, paso
+  3). Pasa cuando el email ya existe con **otro** DNI (sección 5.1).
+- `useAuth` y `useAuthNotice` se importan de `../../auth/hooks/`: es la única funcionalidad de la
+  que `patients/` puede importar (plan, sección 9, regla 1).
+- El enlace de abajo lleva al login del admin.
+
+#### Archivo 17 de 22 · `backendError.js`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/auth/helpers/backendError.js` |
+|---|---|
+| **Carpeta** | `src/modules/auth/helpers/` |
+| **Archivo** | `backendError.js` |
+| **Ruta completa** | `src/modules/auth/helpers/backendError.js` |
+
+**Qué hace y por qué:**
+
+Los mensajes del boilerplate por códigos numéricos (`1000`, `1002`) que el backend no usa. Ahora
+cada error trae su `message` en español dentro del `ApiError`. Las dos páginas de login que lo
+importaban ya están reescritas, así que se borra.
+
+#### Archivo 18 de 22 · `Sidebar.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (74 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/components/` |
+| **Archivo** | `Sidebar.jsx` |
+| **Ruta completa** | `src/modules/dashboard/components/Sidebar.jsx` |
+
+````jsx
+import { NavLink } from 'react-router-dom';
+import Icon from '../../shared/components/atoms/Icon';
+
+const NAV_ITEMS = [
+  { to: '/admin/home', label: 'Tablero', icon: 'grid' },
+  { to: '/admin/doctors', label: 'Doctores', icon: 'briefcase' },
+  { to: '/admin/specialties', label: 'Especialidades', icon: 'medical' },
+  { to: '/admin/patients', label: 'Búsqueda de turnos', icon: 'userSearch' },
+];
+
+const linkClass = ({ isActive }) =>
+  `flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium transition ${
+    isActive
+      ? 'bg-med-primary-50 text-med-primary-900 border-r-4 border-med-primary-900'
+      : 'text-med-text-sub hover:bg-gray-50 hover:text-med-primary-900'
+  }`;
+
+// Admin menu (spec 10): fixed on the left from `lg`, a sliding panel below (spec 12.2).
+function Sidebar({ open, email, onNavigate, onLogout }) {
+  return (
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-med-border flex flex-col justify-between transition-transform duration-200 lg:translate-x-0 ${
+        open ? 'translate-x-0' : '-translate-x-full'
+      }`}
+    >
+      <div>
+        <div className="p-6 border-b border-med-border-subtle">
+          <h2 className="text-base font-bold text-med-primary-900 leading-tight">
+            MedPortal
+          </h2>
+          <span className="text-xs font-medium text-med-text-muted">
+            Administración
+          </span>
+        </div>
+
+        <nav aria-label="Menú principal" className="p-3 space-y-1">
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onNavigate}
+              className={linkClass}
+            >
+              <Icon name={item.icon} className="w-5 h-5" />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+
+      <div className="p-4 border-t border-med-border-subtle space-y-3">
+        <button
+          type="button"
+          onClick={onLogout}
+          className="w-full min-h-11 flex items-center gap-3 px-3 py-2 text-xs font-medium text-med-text-sub hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+        >
+          <Icon name="logout" className="w-4 h-4 text-med-text-muted" />
+          <span>Cerrar sesión</span>
+        </button>
+
+        <div className="pt-3 border-t border-med-border overflow-hidden">
+          <p className="text-xs font-semibold text-med-text-main truncate">
+            {email}
+          </p>
+          <p className="text-[11px] text-med-text-muted truncate">
+            Administrador
+          </p>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+export default Sidebar;
+````
+
+**Qué hace y por qué:**
+
+El menú lateral del admin (sección 10). Es presentacional: recibe todo por props.
+
+- `NAV_ITEMS` es la lista de opciones. Se dibuja con `map` y la `key` es la URL, que es única
+  (plan, sección 8.2). "Búsqueda de Pacientes" del boilerplate pasa a "Búsqueda de turnos", que es
+  lo que hace esa pantalla (P2, diferencias con el mockup). Los íconos son nombres del `Icon` de la
+  tarea 1, en vez de los SVG copiados en línea del boilerplate (B13).
+- `NavLink` es un `Link` que sabe si su URL es la actual. A `className` se le pasa una **función**
+  que recibe `{ isActive }` y devuelve las clases: la opción activa queda resaltada y con una barra
+  a la derecha.
+- Props: `open` (si el panel está abierto en el celular), `email` (el de la sesión), `onNavigate`
+  (cierra el panel al elegir una opción) y `onLogout`.
+- Cómo se esconde en el celular: el `<aside>` es `fixed` (fijo a la izquierda, encima del
+  contenido). Con `-translate-x-full` se corre a la izquierda todo su ancho y queda fuera de la
+  pantalla; con `translate-x-0` está en su lugar. `lg:translate-x-0` lo deja siempre visible desde
+  1024 px (sección 12.2: en el celular y la tablet es un panel deslizable; desde `lg:`, fijo a la
+  izquierda). `transition-transform duration-200` hace que se deslice en vez de aparecer de golpe.
+- `aria-label="Menú principal"` en el `<nav>` le dice al lector de pantalla qué es ese menú.
+- Abajo: el botón "Cerrar sesión" y el email de la sesión con el texto "Administrador" (antes:
+  "Admin User / Super Administrator"). `truncate` corta con "…" un email largo en vez de
+  desbordar.
+
+#### Archivo 19 de 22 · `DashboardLayout.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (229 líneas) y escribí este código (66 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/components/` |
+| **Archivo** | `DashboardLayout.jsx` |
+| **Ruta completa** | `src/modules/dashboard/components/DashboardLayout.jsx` |
+
+````jsx
+import { useState } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import Sidebar from './Sidebar';
+import useAuth from '../../auth/hooks/useAuth';
+import Icon from '../../shared/components/atoms/Icon';
+
+// Admin template: Sidebar + content (spec 10).
+function DashboardLayout() {
+  const [openMobileMenu, setOpenMobileMenu] = useState(false);
+  const navigate = useNavigate();
+  const { session, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/admin/login');
+  };
+
+  return (
+    <div className="min-h-screen bg-med-bg flex">
+      <Sidebar
+        open={openMobileMenu}
+        email={session?.email}
+        onNavigate={() => setOpenMobileMenu(false)}
+        onLogout={handleLogout}
+      />
+
+      {/* Backdrop for the mobile panel */}
+      {openMobileMenu && (
+        <div
+          aria-hidden="true"
+          onClick={() => setOpenMobileMenu(false)}
+          className="fixed inset-0 bg-slate-900/40 z-30 lg:hidden"
+        />
+      )}
+
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
+        {/* Mobile top bar */}
+        <header className="lg:hidden bg-white border-b border-med-border px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-med-primary-900 text-white flex items-center justify-center font-bold text-xs">
+              MP
+            </div>
+            <span className="font-bold text-sm text-med-primary-900">
+              MedPortal
+            </span>
+          </div>
+          <button
+            type="button"
+            aria-label="Abrir menú"
+            aria-expanded={openMobileMenu}
+            onClick={() => setOpenMobileMenu(!openMobileMenu)}
+            className="min-w-11 min-h-11 flex items-center justify-center p-1.5 rounded-lg border border-med-border text-med-text-sub"
+          >
+            <Icon name="menu" className="w-5 h-5" />
+          </button>
+        </header>
+
+        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default DashboardLayout;
+````
+
+**Qué hace y por qué:**
+
+La plantilla de todas las pantallas del admin (sección 10): el `Sidebar` a la izquierda y el
+contenido a la derecha. Se reemplaza entera: el boilerplate tenía el menú escrito adentro, con los
+SVG y los datos de ejemplo.
+
+- `openMobileMenu` es el estado del panel en el celular.
+- `handleLogout` cierra la sesión y va a `/admin/login`.
+- `email={session?.email}` le pasa al menú el email real de la sesión.
+- El **fondo oscuro** (`bg-slate-900/40`, negro al 40 %) se dibuja solo con el panel abierto. Al
+  tocarlo, cierra el panel. `aria-hidden="true"` lo oculta para los lectores de pantalla, porque es
+  decoración. `lg:hidden`: desde 1024 px no existe, porque el menú está fijo.
+- `lg:pl-64` deja a la izquierda el lugar que ocupa el `Sidebar` fijo (256 px) desde 1024 px.
+  `min-w-0` permite que esta columna se achique por debajo del ancho de su contenido; sin eso, algo
+  ancho adentro puede estirar la página y provocar desplazamiento horizontal a 360 px.
+- La **barra superior del celular** (`lg:hidden`: se ve en el celular y la tablet) tiene la marca "MedPortal" (sección 8: un solo
+  nombre en toda la app; el boilerplate decía "Medical Center") y el botón del menú.
+  `aria-label="Abrir menú"` porque es solo un ícono; `aria-expanded` le dice al lector de pantalla
+  si el panel está abierto o cerrado.
+- `<Outlet />` es donde se dibuja la página de admin que corresponde a la URL. El layout se dibuja
+  una vez y solo cambia lo de adentro (plan, sección 8.9).
+
+#### Archivo 20 de 22 · `PatientNavbar.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (116 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/patients/components/` |
+| **Archivo** | `PatientNavbar.jsx` |
+| **Ruta completa** | `src/modules/patients/components/PatientNavbar.jsx` |
+
+````jsx
+import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import Icon from '../../shared/components/atoms/Icon';
+
+const NAV_ITEMS = [
+  { to: '/', label: 'Reservar turno', end: true },
+  { to: '/appointments', label: 'Mis turnos', end: false },
+];
+
+const desktopLinkClass = ({ isActive }) =>
+  `px-3.5 py-2 rounded-lg text-sm font-semibold transition ${
+    isActive
+      ? 'bg-med-primary-900 text-white'
+      : 'text-med-text-sub hover:bg-med-primary-50 hover:text-med-primary-900'
+  }`;
+
+const mobileLinkClass = ({ isActive }) =>
+  `block min-h-11 px-3 py-2.5 rounded-lg text-sm font-semibold transition ${
+    isActive
+      ? 'bg-med-primary-900 text-white'
+      : 'text-med-text-sub hover:bg-med-primary-50'
+  }`;
+
+// Patient top bar (spec 10): links inline from `md`, a drop-down below.
+// Shows the session email and DNI (spec 5.2).
+function PatientNavbar({ email, dni, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+
+  return (
+    <header className="bg-white shadow-xs border-b border-med-border sticky top-0 z-30">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-6 sm:gap-8">
+          <NavLink to="/" className="min-h-11 flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-lg bg-med-primary-900 text-white flex items-center justify-center shadow-xs">
+              <Icon name="briefcase" />
+            </span>
+            <span className="text-lg font-bold text-med-primary-900 tracking-tight">
+              MedPortal
+            </span>
+          </NavLink>
+
+          <nav aria-label="Menú principal" className="hidden md:flex gap-2">
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={desktopLinkClass}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="hidden sm:flex flex-col items-end leading-tight">
+            <span className="text-xs font-semibold text-med-text-main">
+              {email}
+            </span>
+            <span className="text-[11px] text-med-text-muted">DNI {dni}</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onLogout}
+            className="hidden sm:inline-flex text-xs font-semibold text-med-text-sub hover:text-red-600 px-2.5 py-1.5 rounded-lg border border-med-border hover:bg-red-50/40 transition"
+          >
+            Salir
+          </button>
+
+          <button
+            type="button"
+            aria-label="Abrir menú"
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+            className="md:hidden min-w-11 min-h-11 flex items-center justify-center p-1.5 rounded-lg border border-med-border text-med-text-sub hover:bg-gray-50"
+          >
+            <Icon name="menu" className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="md:hidden border-t border-med-border px-4 py-3 bg-white space-y-2">
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              onClick={close}
+              className={mobileLinkClass}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+          <div className="pt-2 border-t border-med-border-subtle flex items-center justify-between gap-3">
+            <span className="text-xs font-medium text-med-text-sub break-all">
+              {email} · DNI {dni}
+            </span>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="min-h-11 shrink-0 text-xs font-bold text-red-600"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
+
+export default PatientNavbar;
+````
+
+**Qué hace y por qué:**
+
+La barra superior del paciente (sección 10). Muestra el email y el DNI de la sesión (sección 5.2),
+en vez de "Johnathan Doe" del boilerplate. Se quita la campanita de notificaciones, que solo hacía
+`alert()`.
+
+- `NAV_ITEMS`: "Reservar turno" (`/`) y "Mis turnos" (`/appointments`). El `end: true` de la
+  primera hace que `NavLink` la marque activa **solo** en `/` exacto. Sin `end`, como todas las URLs
+  empiezan con `/`, "Reservar turno" quedaría marcada también en `/appointments`.
+- Dos estilos de enlace: `desktopLinkClass` para la fila de la computadora y `mobileLinkClass` para
+  el desplegable del celular (este con `min-h-11`, para tocarlo con el dedo).
+- `open` es el estado del desplegable. Es estado propio del menú (nadie más lo necesita), por eso
+  vive acá y no en el layout.
+- Responsive: los enlaces en fila son `hidden md:flex` (aparecen desde 768 px). El botón del menú es
+  `md:hidden` (solo en el celular y la tablet chica). El email, el DNI y el botón "Salir" son
+  `hidden sm:...` (desde 640 px); en el celular están dentro del desplegable.
+- En el desplegable, `break-all` deja cortar un email largo en cualquier letra, para que no empuje
+  el ancho de la página a 360 px.
+
+#### Archivo 21 de 22 · `PatientLayout.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (178 líneas) y escribí este código (30 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/patients/components/` |
+| **Archivo** | `PatientLayout.jsx` |
+| **Ruta completa** | `src/modules/patients/components/PatientLayout.jsx` |
+
+````jsx
+import { Outlet, useNavigate } from 'react-router-dom';
+import PatientNavbar from './PatientNavbar';
+import useAuth from '../../auth/hooks/useAuth';
+
+// Patient template: PatientNavbar + content (spec 10).
+function PatientLayout() {
+  const navigate = useNavigate();
+  const { session, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <div className="min-h-screen bg-med-bg flex flex-col">
+      <PatientNavbar
+        email={session?.email}
+        dni={session?.dni}
+        onLogout={handleLogout}
+      />
+
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+export default PatientLayout;
+````
+
+**Qué hace y por qué:**
+
+La plantilla de las pantallas del paciente: `PatientNavbar` arriba y el contenido abajo, con
+`<Outlet />`. Se reemplaza entera: el boilerplate tenía la barra escrita adentro.
+
+- `handleLogout` cierra la sesión y va a `/login`.
+- Le pasa al menú `session?.email` y `session?.dni`.
+- `p-4 sm:p-6 lg:p-8`: el margen interno crece con la pantalla (16, 24 y 32 px).
+
+#### Archivo 22 de 22 · `router.jsx`
+
+| **Qué hacer** | **Modificar** 3 lugares del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/` |
+| **Archivo** | `router.jsx` |
+| **Ruta completa** | `src/router.jsx` |
+
+**Líneas 1 a 7** (en el archivo ya modificado):
+
+````diff
+@@ -1,5 +1,7 @@
+ import { createBrowserRouter, Navigate } from 'react-router-dom';
++import GuestRoute from './modules/auth/components/GuestRoute';
+ import ProtectedRoute from './modules/auth/components/ProtectedRoute';
++import { ROLES } from './modules/shared/constants/roles';
+ 
+ // Auth Module
+ import AdminLoginPage from './modules/auth/pages/AdminLoginPage';
+````
+
+**Líneas 18 a 59** (en el archivo ya modificado):
+
+````diff
+@@ -16,36 +18,42 @@ import OverviewPage from './modules/dashboard/pages/OverviewPage';
+ 
+ // Domain Modules (Screaming Architecture)
+ import DoctorsPage from './modules/doctors/pages/DoctorsPage';
+-import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
+ import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
++import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
+ 
+ const routes = [
+-  // Public routes
++  // Public routes: with an active session they redirect to the role's home
+   {
+-    path: '/login',
+-    element: <PatientLoginPage />,
+-  },
+-  {
+-    path: '/admin/login',
+-    element: <AdminLoginPage />,
++    element: <GuestRoute />,
++    children: [
++      {
++        path: '/login',
++        element: <PatientLoginPage />,
++      },
++      {
++        path: '/admin/login',
++        element: <AdminLoginPage />,
++      },
++    ],
+   },
+ 
+   // Patient private routes
+   {
+     path: '/',
+-    element: (
+-      <ProtectedRoute redirectTo="/login">
+-        <PatientLayout />
+-      </ProtectedRoute>
+-    ),
++    element: <ProtectedRoute role={ROLES.PATIENT} />,
+     children: [
+       {
+-        index: true,
+-        element: <PatientHome />,
+-      },
+-      {
+-        path: 'appointments',
+-        element: <AppointmentsPage />,
++        element: <PatientLayout />,
++        children: [
++          {
++            index: true,
++            element: <PatientHome />,
++          },
++          {
++            path: 'appointments',
++            element: <AppointmentsPage />,
++          },
++        ],
+       },
+     ],
+   },
+````
+
+**Líneas 61 a 92** (en el archivo ya modificado):
+
+````diff
+@@ -53,31 +61,32 @@ const routes = [
+   // Admin private routes
+   {
+     path: '/admin',
+-    element: (
+-      <ProtectedRoute redirectTo="/admin/login">
+-        <DashboardLayout />
+-      </ProtectedRoute>
+-    ),
++    element: <ProtectedRoute role={ROLES.ADMIN} />,
+     children: [
+       {
+-        index: true,
+-        element: <Navigate to="/admin/home" replace />,
+-      },
+-      {
+-        path: 'home',
+-        element: <OverviewPage />,
+-      },
+-      {
+-        path: 'patients',
+-        element: <AppointmentsSearchPage />,
+-      },
+-      {
+-        path: 'specialties',
+-        element: <SpecialtiesPage />,
+-      },
+-      {
+-        path: 'doctors',
+-        element: <DoctorsPage />,
++        element: <DashboardLayout />,
++        children: [
++          {
++            index: true,
++            element: <Navigate to="/admin/home" replace />,
++          },
++          {
++            path: 'home',
++            element: <OverviewPage />,
++          },
++          {
++            path: 'doctors',
++            element: <DoctorsPage />,
++          },
++          {
++            path: 'patients',
++            element: <AppointmentsSearchPage />,
++          },
++          {
++            path: 'specialties',
++            element: <SpecialtiesPage />,
++          },
++        ],
+       },
+     ],
+   },
+````
+
+**Qué hace y por qué:**
+
+La lista de URLs (plan, sección 8.9; especificación, sección 8). Tres cambios:
+
+1. **Los logins quedan adentro de `GuestRoute`.** Es una ruta **sin `path`**: no agrega nada a la
+   URL, solo envuelve a sus hijas. React Router dibuja `GuestRoute` y, en su `<Outlet />`, la hija
+   que coincide (`/login` o `/admin/login`).
+2. **Cada zona privada tiene dos niveles:** primero `ProtectedRoute` con su rol (la guarda) y,
+   adentro, una ruta sin `path` con su layout. Así la guarda decide **antes** de dibujar el layout:
+   si no tenés permiso, no se llega a dibujar el menú de la otra zona.
+3. **Las rutas hijas del admin y los imports se reordenan** para que las tareas 3, 4 y 5 no choquen
+   (ver "Por qué así"). Fijate en el orden: rutas `home`, `doctors`, `patients`, `specialties`;
+   imports `DoctorsPage`, `AppointmentsSearchPage`, `SpecialtiesPage`. No lo cambies.
+
+La ruta `*` (cualquier URL que no existe) sigue mandando a `/`. Desde ahí, `ProtectedRoute` manda
+a cada uno a donde corresponde: al paciente le muestra su inicio, al admin lo manda a
+`/admin/home` y a quien no tiene sesión, a `/login` (sección 8).
+
+### Cómo probarlo
+
+Con el backend corriendo en `http://localhost:5278` y `npm run dev` en `http://localhost:5173`
+(plan, sección 3). Antes de empezar, abrí F12 → **Application** → **Session Storage** →
+`http://localhost:5173`: ahí vas a ver aparecer y desaparecer `medportal.session`.
+
+**Admin, caso feliz**
+
+1. Entrá a `http://localhost:5173/admin/login`. Escribí `admin@system.com` / `Admin1234!` y tocá
+   "Iniciar Sesión →". Vas a `/admin/home`, con el menú lateral y tu email abajo, sobre
+   "Administrador".
+2. En Session Storage aparece `medportal.session` con `token`, `role: "ADMINISTRADOR"` y `email`.
+3. Recargá con F5: seguís adentro.
+4. Tocá "Cerrar sesión": volvés a `/admin/login` y `medportal.session` desaparece.
+5. Volvé a entrar y cerrá la pestaña. Abrí una pestaña nueva en `http://localhost:5173/admin/home`:
+   te pide login (la sesión era de la pestaña).
+
+**Admin, errores**
+
+1. Dejá los campos vacíos y tocá el botón: "Ingresá tu correo electrónico" e "Ingresá tu
+   contraseña" debajo de cada campo. Escribí `abc` en el email y salí del campo: "El correo
+   electrónico no es válido". Escribí `1234` en la contraseña y salí: "La contraseña debe tener al
+   menos 8 caracteres".
+2. `admin@system.com` con una contraseña equivocada de 8 o más caracteres: "Usuario o contraseña
+   incorrectos" arriba del formulario. **No** te saca de la pantalla (el `401` de un login no
+   desloguea).
+3. Repetí el intento equivocado varias veces seguidas (el límite es 5 por minuto, sección 6.6):
+   aparece "Demasiadas solicitudes. Intentá de nuevo en un minuto" y el botón queda deshabilitado
+   unos 10 segundos.
+4. Apagá el backend e intentá entrar: "No se pudo conectar con el servidor". Volvé a prenderlo.
+5. Las credenciales de prueba del boilerplate ya no entran: `admin` ni siquiera pasa la validación
+   ("El correo electrónico no es válido"), y `admin@test.com` / `admin123` llega al backend y
+   responde "Usuario o contraseña incorrectos".
+
+**Paciente**
+
+1. Entrá a `http://localhost:5173/login`. Escribí cualquier email que no hayas usado, un DNI de 7
+   u 8 dígitos y, si querés, tu nombre. Tocá "Ingresar": la cuenta se crea y vas a `/`. Arriba ves
+   el email y "DNI …".
+2. En Session Storage la sesión tiene además `dni` y `patientId`, con `role: "PACIENTE"`.
+3. Cerrá sesión y entrá con el **mismo email** y **otro DNI**: "El email y el DNI no coinciden con
+   un paciente registrado."
+4. DNI con 6 dígitos o con letras: "El DNI debe tener 7 u 8 dígitos". Nombre de 2 letras: "El
+   nombre debe tener entre 3 y 150 caracteres".
+5. Varios intentos equivocados seguidos (límite 10 por minuto): el mismo mensaje de demasiadas
+   solicitudes y el botón deshabilitado unos segundos.
+
+**Guardas**
+
+1. Logueado como paciente, escribí `http://localhost:5173/admin/home`: volvés a `/`.
+2. Logueado como admin, escribí `http://localhost:5173/` o `http://localhost:5173/login`: volvés a
+   `/admin/home`.
+3. Sin sesión, escribí `http://localhost:5173/admin/doctors`: vas a `/admin/login`. Sin sesión,
+   `http://localhost:5173/appointments`: vas a `/login`.
+4. Una URL que no existe (`http://localhost:5173/cualquiera`) te deja en el inicio de tu rol, o en
+   `/login` si no tenés sesión.
+5. **Sesión rota** (el error de la página en blanco): logueado, en Session Storage editá
+   `medportal.session` y cambiá el `role` por `"OTRO"`. Recargá: tiene que aparecer el login, no una
+   página en blanco. Lo mismo si borrás el `token`.
+
+**Sesión vencida.** En esta rama todavía ninguna pantalla llama a un endpoint protegido (las
+páginas siguen con los datos de ejemplo del boilerplate), así que el `401` no se puede disparar
+acá. Se prueba en las tareas 5 y 6, que sí llaman al backend: está en su "Cómo probarlo".
+
+**360 px:** F12 → ícono de celular → ancho 360 (plan, sección 6). Los dos logins entran sin
+desplazamiento horizontal. En el admin, el menú lateral desaparece y arriba está la barra con
+"MedPortal" y el botón del menú: al tocarlo se abre el panel con el fondo oscuro; al elegir una
+opción o tocar el fondo, se cierra. En el paciente, el botón del menú abre el desplegable con los
+dos enlaces, el email, el DNI y "Cerrar sesión".
+
+### Commit
+
+````text
+feat(auth): conectar logins de admin y paciente al backend
+
+Sesión en sessionStorage, rutas protegidas por rol, menús y manejo del 401.
+
+````
+
+```bash
+git add -A
+git status          # tienen que aparecer SOLO los 22 archivos de la tabla (3 como deleted)
+git commit          # se abre el editor: pegá el mensaje de arriba, guardá y cerrá
+git push -u origin feat/session
+```
+
+---
+
+## Tarea 5 — Disponibilidad horaria del médico
+
+| | |
+|---|---|
+| **Responsable** | Nicolás |
+| **Rama** | `feat/doctor-availability` |
+| **Sale de** | `development` con las tareas 1 y 2 mergeadas |
+| **Pantallas / Referencia** | P5 (disponibilidad horaria, CU02) · Sección 8 (rutas `/admin/doctors/availability` y `/admin/doctors/:id/availability`) · 3.5 (patrón de carga) · 11.1 (mensajes de P5) · 12.2 (P5 en el celular) de `15-ESPECIFICACION-FRONT.md` |
+| **Archivos** | 11: 10 nuevos, 1 se modifica |
+
+Escribilos **en este orden** (es el orden en que aparecen abajo, cada uno con su número):
+
+| # | Ruta completa | Qué hacer | Líneas |
+|---|---|---|---|
+| 1 | `src/modules/availabilities/utils/schedule.js` | Crear | +118 −0 |
+| 2 | `src/modules/availabilities/services/availabilitiesService.js` | Crear | +28 −0 |
+| 3 | `src/modules/availabilities/hooks/useDoctorAvailability.js` | Crear | +56 −0 |
+| 4 | `src/modules/availabilities/components/TimeSelect.jsx` | Crear | +36 −0 |
+| 5 | `src/modules/availabilities/components/DayScheduleRow.jsx` | Crear | +82 −0 |
+| 6 | `src/modules/availabilities/components/WeekScheduleForm.jsx` | Crear | +79 −0 |
+| 7 | `src/modules/availabilities/components/DoctorPicker.jsx` | Crear | +30 −0 |
+| 8 | `src/modules/availabilities/components/MonthPicker.jsx` | Crear | +19 −0 |
+| 9 | `src/modules/availabilities/components/DoctorSummary.jsx` | Crear | +16 −0 |
+| 10 | `src/modules/availabilities/pages/AvailabilityPage.jsx` | Crear | +181 −0 |
+| 11 | `src/router.jsx` | Modificar | +9 −0 |
+
+### Qué problema resuelve
+
+El boilerplate **no tiene esta pantalla** (P5: "No existe. Es uno de los formularios que faltan").
+Fijate en `development`: no hay carpeta `src/modules/availabilities/` ni ninguna ruta de
+disponibilidad en `router.jsx`. Sin ella, el administrador no tiene cómo cargar los días y
+horarios en que atiende cada médico, y sin agenda el backend no genera turnos: el paciente no
+podría reservar nada. Es el caso de uso CU02.
+
+La pantalla tiene que:
+
+- elegir un médico (o recibirlo ya elegido por la URL, por ejemplo al recargar la página);
+- elegir un mes, del actual a 12 meses adelante;
+- mostrar siete filas, de lunes a domingo, cada una con un interruptor y la hora de entrada y de
+  salida;
+- crear la agenda del mes si no existe, o reemplazarla si ya existe.
+
+### Por qué así
+
+- **El médico elegido vive en la URL** (`/admin/doctors/:id/availability`, sección 8). Así el
+  listado de médicos (tarea 4) y el tablero (tarea 6) pueden tener un botón que lleva directo a la
+  agenda de un médico, y si recargás la página sigue elegido el mismo. Elegir otro médico en el
+  combo cambia la URL.
+- **Un mes vacío es "alta" (`POST`); un mes con datos es "edición" (`PUT`)** (P5, flujo, pasos 3 y
+  4). El backend tiene dos endpoints con el mismo cuerpo: `POST /api/availabilities` crea la agenda
+  de un mes que no tiene y `PUT /api/availabilities` reemplaza la de un mes que ya tiene. La
+  pantalla no le pregunta al usuario cuál quiere: lo sabe porque acaba de pedir la agenda de ese
+  mes. Si vino vacía, `POST`; si no, `PUT`. Después de guardar bien recarga la agenda, que ya no
+  está vacía, y queda en modo edición (paso 6).
+- **Las horas se eligen de una lista cada 30 minutos**, no con un campo de hora libre (P5, reglas
+  del formulario). El backend arma turnos de 30 minutos y rechaza horas desalineadas
+  (`AVAILABILITY_NOT_ALIGNED`). Con un `select` que solo ofrece `00:00`, `00:30`… `23:30`, es
+  **imposible** elegir una hora mala, y no depende de cómo cada navegador dibuja
+  `input type="time"`.
+- **Un rango por día.** El backend acepta varios rangos por día; el mockup muestra uno solo (P5,
+  casos borde). La pantalla maneja uno. Si la agenda que llega tiene dos para el mismo día
+  (cargada desde Swagger), se muestra el primero y un aviso de que al guardar se reemplazan todos.
+- **La conversión entre "lista del backend" y "siete filas del formulario" está en un solo archivo,
+  `utils/schedule.js`**, con funciones comunes que no son React. El backend habla en una lista de
+  rangos (`[{ day, startTime, endTime }]`, solo los días que atienden); el formulario necesita
+  siete filas fijas con un interruptor. Separarlo deja la página y el formulario cortos, y las
+  funciones se pueden probar solas.
+- **Los meses se calculan en UTC.** El backend decide si un mes ya pasó usando la hora UTC. Cerca de
+  la medianoche del último día del mes, en Argentina (UTC-3) todavía es el mes anterior, y
+  ofreceríamos un mes que el backend rechaza. Calculando en UTC, el combo coincide con el backend.
+- **El formulario de la semana usa React Hook Form, como todos los formularios** (sección 11.2).
+  Las siete filas son un solo campo `rows` del formulario (`rows.0.startTime`, `rows.3.active`…).
+  Tres detalles resuelven lo que no es un campo de texto común:
+  - **El interruptor pasa por `Controller`.** `Switch` es un botón, no un `<input>`, así que no se
+    puede conectar con `register`. `Controller` es el adaptador de React Hook Form para eso: le da
+    al componente su valor y la función para cambiarlo.
+  - **La regla "entrada anterior a salida" mira dos campos** y además depende del interruptor. Se
+    escribe una sola vez, en la hora de salida, y con `deps` se le pide a React Hook Form que la
+    vuelva a validar cuando cambia la hora de entrada o el interruptor de ese día. Así el error se
+    va apenas corregís la entrada o apagás el día.
+  - **"Al menos un día activo" es una regla sobre la semana entera**, no sobre un campo: se calcula
+    con los valores del formulario (`watch`) y se controla antes de enviar.
+- **El formulario se vuelve a montar cuando llega una agenda nueva** (con la `key` de React, ver
+  `AvailabilityPage.jsx`). Así su estado arranca de cero con los datos frescos, sin tener que
+  sincronizar a mano.
+- **Todos los componentes de la carpeta son propios de la funcionalidad** (`DoctorPicker`,
+  `MonthPicker`, `WeekScheduleForm`, `DayScheduleRow`, `TimeSelect`: sección 10, "Componentes
+  propios de cada feature"). Solo se reutiliza de `shared/` lo que ya existe: `Select`, `Switch`,
+  `FormField`, `Alert`, `Card`, `Spinner`, `Button` y el hook `useDoctorOptions`.
+
+### Qué afecta
+
+- **Quién llega a esta pantalla:** el listado de médicos de la tarea 4 (Matías) tiene el botón
+  "Agregar disponibilidad horaria" (`/admin/doctors/availability`). Esa tarea se hace en paralelo
+  con esta: **hasta que esta tarea se mergea, ese botón lleva a una ruta de admin que no existe**,
+  que cae en la ruta `*`, va a `/` y la guarda te devuelve a `/admin/home`. No es un error: es lo
+  esperable hasta que se mergea la 5.
+- **El botón "Cancelar"** va a `/admin/doctors`, que existe desde el boilerplate (y que la tarea 4
+  conecta al backend).
+- **Qué cambia para el usuario:** el admin puede cargar la agenda de un médico por mes. Al
+  guardar, el backend genera los turnos de 30 minutos que después ve el paciente en la reserva
+  (tarea 7). El estado "Con agenda / Sin agenda" del listado y del tablero depende de esto.
+- **Qué NO se toca:** nada de `shared/` ni de otras funcionalidades. Del router solo se agregan
+  dos rutas y un import, en el lugar que dejó preparado la tarea 2.
+
+### Código, archivo por archivo
+
+#### Archivo 1 de 11 · `schedule.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (118 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/utils/` |
+| **Archivo** | `schedule.js` |
+| **Ruta completa** | `src/modules/availabilities/utils/schedule.js` |
+
+````js
+// Week rows shown by the form, Monday first. `code` is what the API accepts.
+const WEEK_DAYS = [
+  { code: 'LUNES', label: 'Lunes' },
+  { code: 'MARTES', label: 'Martes' },
+  { code: 'MIERCOLES', label: 'Miércoles' },
+  { code: 'JUEVES', label: 'Jueves' },
+  { code: 'VIERNES', label: 'Viernes' },
+  { code: 'SABADO', label: 'Sábado' },
+  { code: 'DOMINGO', label: 'Domingo' },
+];
+
+const DEFAULT_START = '09:00';
+const DEFAULT_END = '13:00';
+const MONTHS_AHEAD = 12;
+
+// 00:00, 00:30, ... 23:30: aligned to 30-minute blocks by construction.
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+  const hours = String(Math.floor(index / 2)).padStart(2, '0');
+  const minutes = index % 2 === 0 ? '00' : '30';
+
+  return `${hours}:${minutes}`;
+});
+
+// The API answers "MIÉRCOLES" / "SÁBADO" and accepts them without accents.
+function normalizeDay(day) {
+  return String(day).normalize('NFD').replace(/\p{M}/gu, '').toUpperCase();
+}
+
+function emptyRows() {
+  return WEEK_DAYS.map(({ code }) => ({
+    day: code,
+    active: false,
+    startTime: DEFAULT_START,
+    endTime: DEFAULT_END,
+  }));
+}
+
+// API list -> one row per week day. The screen handles one range per day:
+// when a day has more than one, the first one is kept and `hasExtraRanges`
+// tells the page to warn that saving replaces them.
+function toRows(availabilities) {
+  const seen = new Set();
+  let hasExtraRanges = false;
+
+  const sorted = [...availabilities].sort((a, b) =>
+    a.startTime.localeCompare(b.startTime)
+  );
+
+  const rows = emptyRows().map((row) => {
+    const match = sorted.find((item) => normalizeDay(item.day) === row.day);
+
+    if (!match) {
+      return row;
+    }
+
+    return {
+      ...row,
+      active: true,
+      startTime: match.startTime,
+      endTime: match.endTime,
+    };
+  });
+
+  sorted.forEach((item) => {
+    const day = normalizeDay(item.day);
+
+    if (seen.has(day)) {
+      hasExtraRanges = true;
+    }
+
+    seen.add(day);
+  });
+
+  return { rows, hasExtraRanges };
+}
+
+function toPayloadDays(rows) {
+  return rows
+    .filter((row) => row.active)
+    .map(({ day, startTime, endTime }) => ({ day, startTime, endTime }));
+}
+
+// Current month plus the next 12 (spec P5, decision D41). Computed in UTC
+// because the backend decides "past month" with UTC now: near midnight of the
+// last day of a month, local time (UTC-3) is still in the previous month.
+function monthOptions(now = new Date()) {
+  const formatter = new Intl.DateTimeFormat('es-AR', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+
+  return Array.from({ length: MONTHS_AHEAD + 1 }, (_, offset) => {
+    const date = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset, 1)
+    );
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + 1;
+    const label = formatter.format(date);
+
+    return {
+      value: `${year}-${month}`,
+      year,
+      month,
+      label: label.charAt(0).toUpperCase() + label.slice(1),
+    };
+  });
+}
+
+export {
+  WEEK_DAYS,
+  TIME_OPTIONS,
+  emptyRows,
+  toRows,
+  toPayloadDays,
+  monthOptions,
+  normalizeDay,
+};
+````
+
+**Qué hace y por qué:**
+
+Funciones comunes (no React) que convierten entre lo que habla el backend y lo que necesita el
+formulario. Son el corazón de la pantalla, así que va línea por línea.
+
+- **`WEEK_DAYS`** (líneas 2 a 10): los siete días, lunes primero. `code` es lo que manda y entiende
+  la API (`'LUNES'`, `'MIERCOLES'`…, sin tilde); `label` es lo que se ve (`'Miércoles'`, con
+  tilde). El domingo está porque el contrato incluye los siete días (P5, diferencias con el
+  mockup).
+- **`DEFAULT_START` y `DEFAULT_END`** (líneas 12 y 13): las horas con las que arranca una fila
+  inactiva: `09:00` a `13:00`. Cuando el admin activa un día, ya tiene un horario razonable.
+- **`MONTHS_AHEAD = 12`** (línea 14): cuántos meses después del actual ofrece el combo.
+- **`TIME_OPTIONS`** (líneas 17 a 22): la lista de horas del combo.
+  - `Array.from({ length: 48 }, (_, index) => ...)` arma un array de 48 elementos llamando a la
+    función con cada posición, de `0` a `47`. 48 porque un día tiene 24 horas × 2 medias horas.
+  - `Math.floor(index / 2)` es la hora: las posiciones 0 y 1 son la hora 0, la 2 y la 3 la hora 1,
+    y así. `String(...).padStart(2, '0')` le agrega un cero adelante si tiene un dígito (`9` →
+    `'09'`).
+  - `index % 2 === 0 ? '00' : '30'`: las posiciones pares son en punto y las impares, y media.
+  - Resultado: `'00:00'`, `'00:30'`, `'01:00'` … `'23:30'`. Todas alineadas a 30 minutos **por
+    construcción**.
+- **`normalizeDay(day)`** (líneas 25 a 27): el backend **responde** `'MIÉRCOLES'` y `'SÁBADO'` con
+  tilde, pero **acepta** sin tilde. Para comparar, se les saca la tilde:
+  - `.normalize('NFD')` separa cada letra con tilde en dos caracteres: la letra y la tilde suelta
+    (`'É'` → `'E'` + `'́'`).
+  - `.replace(/\p{M}/gu, '')` borra todas las "marcas" (`\p{M}` es cualquier tilde o diacrítico;
+    la `u` habilita esa sintaxis y la `g` reemplaza todas).
+  - `.toUpperCase()` por las dudas, para comparar siempre en mayúsculas.
+- **`emptyRows()`** (líneas 29 a 36): las siete filas vacías. Una por día, inactiva y con las horas
+  por defecto. Es lo que se ve cuando el mes no tiene agenda.
+- **`toRows(availabilities)`** (líneas 41 a 75): de la lista del backend a las siete filas.
+  - Primero copia la lista (`[...availabilities]`, para no modificar el array que recibió) y la
+    ordena por `startTime`. `localeCompare` compara textos; como las horas son `'HH:mm'`, el orden
+    alfabético es el orden horario.
+  - Después recorre las siete filas vacías. Para cada día busca en la lista ordenada (`find`) el
+    **primer** rango de ese día. Si no hay, la fila queda como está (inactiva). Si hay, la marca
+    activa y le copia las horas (`{ ...row, ... }` crea una fila nueva con lo de `row` más los
+    cambios).
+  - Al final cuenta cuántos rangos tiene cada día con un `Set` (un conjunto: no guarda
+    repetidos). Si un día ya estaba en `seen`, es que tiene más de un rango y `hasExtraRanges`
+    pasa a `true`.
+  - Devuelve `{ rows, hasExtraRanges }`. La página usa `hasExtraRanges` para el aviso "Este mes
+    tiene más de un horario en algún día…".
+- **`toPayloadDays(rows)`** (líneas 77 a 81): el camino inverso, de las siete filas a lo que se
+  manda. Se queda solo con las activas (`filter`) y de cada una toma solo `day`, `startTime` y
+  `endTime` (`map`). Un día inactivo **no se manda** (P5, reglas del formulario).
+- **`monthOptions(now)`** (líneas 86 a 108): las opciones del combo de mes, el actual y los 12
+  siguientes (decisión D41).
+  - `Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' })` es el
+    formateador de fechas del navegador: convierte una fecha en `'noviembre de 2026'`.
+  - `Array.from({ length: MONTHS_AHEAD + 1 }, ...)` arma 13 opciones; `offset` va de 0 a 12.
+  - `Date.UTC(año, mes + offset, 1)` es el día 1 del mes que corresponde, en UTC. Si el mes se pasa
+    de diciembre, JavaScript lo acomoda solo (mes 12 del 2026 = enero del 2027).
+  - `getUTCMonth()` cuenta los meses desde 0 (enero = 0), por eso `+ 1`: el backend los espera de 1
+    a 12.
+  - Cada opción es `{ value: '2026-11', year: 2026, month: 11, label: 'Noviembre de 2026' }`.
+    `value` es lo que guarda el combo; `year` y `month` son lo que se manda al backend. La última
+    línea pone en mayúscula la primera letra del nombre.
+  - `now = new Date()` es un parámetro con valor por defecto: normalmente se usa la fecha actual,
+    pero se le puede pasar otra para probar la función.
+
+#### Archivo 2 de 11 · `availabilitiesService.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (28 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/services/` |
+| **Archivo** | `availabilitiesService.js` |
+| **Ruta completa** | `src/modules/availabilities/services/availabilitiesService.js` |
+
+````js
+import { instance } from '../../shared/api/axiosInstance';
+
+// GET /api/doctors/{id}/availabilities?year&month -> [{ id, day, startTime, endTime }]
+// An empty array means the doctor has no schedule for that month.
+async function getDoctorAvailabilities(doctorId, { year, month }) {
+  const response = await instance.get(
+    `api/doctors/${doctorId}/availabilities`,
+    { params: { year, month } }
+  );
+
+  return response.data;
+}
+
+// Same body for POST (create) and PUT (replace):
+// { doctorId, days: [{ day, startTime, endTime }], year, month }
+async function createAvailability(body) {
+  const response = await instance.post('api/availabilities', body);
+
+  return response.data;
+}
+
+async function updateAvailability(body) {
+  const response = await instance.put('api/availabilities', body);
+
+  return response.data;
+}
+
+export { getDoctorAvailabilities, createAvailability, updateAvailability };
+````
+
+**Qué hace y por qué:**
+
+La capa **service** de la funcionalidad (plan, sección 8.6): una función por endpoint.
+
+- `getDoctorAvailabilities(doctorId, { year, month })` llama a
+  `GET /api/doctors/{id}/availabilities?year=&month=`. `params` hace que Axios arme el `?year=…&month=…`
+  por vos. Devuelve la lista de rangos, o `[]` si el médico no tiene agenda ese mes (P5, lectura).
+- `createAvailability(body)` hace `POST /api/availabilities` (mes nuevo) y `updateAvailability(body)`
+  hace `PUT /api/availabilities` (reemplaza el mes). Las dos mandan el mismo cuerpo:
+  `{ doctorId, days, year, month }` (P5, escritura).
+
+#### Archivo 3 de 11 · `useDoctorAvailability.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (56 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/hooks/` |
+| **Archivo** | `useDoctorAvailability.js` |
+| **Ruta completa** | `src/modules/availabilities/hooks/useDoctorAvailability.js` |
+
+````js
+import { useCallback, useEffect, useState } from 'react';
+import { getDoctorAvailabilities } from '../services/availabilitiesService';
+
+// Schedule of one doctor for one month. Without doctorId it does nothing.
+// A stale response (doctor or month changed meanwhile) is ignored.
+function useDoctorAvailability(doctorId, year, month) {
+  const [availabilities, setAvailabilities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  // Increases on every successful load, so a form can remount with fresh data.
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    if (!doctorId) {
+      setAvailabilities([]);
+      setError(null);
+      setLoading(false);
+
+      return undefined;
+    }
+
+    let ignore = false;
+
+    setLoading(true);
+    setError(null);
+
+    getDoctorAvailabilities(doctorId, { year, month })
+      .then((result) => {
+        if (!ignore) {
+          setAvailabilities(result);
+          setVersion((current) => current + 1);
+        }
+      })
+      .catch((apiError) => {
+        if (!ignore) {
+          setError(apiError);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [doctorId, year, month, reloadKey]);
+
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
+
+  return { availabilities, loading, error, reload, version };
+}
+
+export default useDoctorAvailability;
+````
+
+**Qué hace y por qué:**
+
+Hook propio (plan, sección 8.5) que carga la agenda de un médico en un mes. Sigue el patrón de
+carga de la sección 3.5 de la especificación, explicado en el plan, sección 8.4.
+
+- Estados: `availabilities` (la lista), `loading`, `error`, `reloadKey` (un contador para forzar una
+  recarga) y `version`.
+- **`version`** sube en 1 cada vez que una carga sale bien. La página lo usa en la `key` del
+  formulario para que se vuelva a montar con los datos nuevos, y para no mostrar el formulario
+  antes de la primera carga.
+- El `useEffect` depende de `[doctorId, year, month, reloadKey]`: se repite cuando cambia el médico,
+  el mes, o cuando alguien pide recargar.
+  - **Sin médico** (`!doctorId`, la URL `/admin/doctors/availability`): vacía todo y no pide nada.
+    Devuelve `undefined` porque no hay nada que limpiar.
+  - **Con médico:** la bandera `ignore` (plan, sección 8.4). Si elegís un médico y enseguida otro,
+    la respuesta del primero llega tarde y se descarta, en vez de mostrar la agenda del médico
+    equivocado.
+- `reload` sube `reloadKey`, y eso repite el efecto. Está envuelto en `useCallback` para que sea
+  siempre la misma función (ver `useCooldown` de la tarea 2).
+
+#### Archivo 4 de 11 · `TimeSelect.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (36 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/components/` |
+| **Archivo** | `TimeSelect.jsx` |
+| **Ruta completa** | `src/modules/availabilities/components/TimeSelect.jsx` |
+
+````jsx
+import Select from '../../shared/components/atoms/Select';
+import { TIME_OPTIONS } from '../utils/schedule';
+
+// Half-hour times from 00:00 to 23:30 (the backend works in 30-minute blocks).
+// `registration` is what React Hook Form's register() returns.
+function TimeSelect({
+  id,
+  label,
+  disabled,
+  invalid,
+  describedBy,
+  registration,
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-xs text-med-text-sub">
+        {label}
+      </label>
+      <Select
+        id={id}
+        disabled={disabled}
+        invalid={invalid}
+        aria-describedby={describedBy}
+        {...registration}
+      >
+        {TIME_OPTIONS.map((time) => (
+          <option key={time} value={time}>
+            {time}
+          </option>
+        ))}
+      </Select>
+    </div>
+  );
+}
+
+export default TimeSelect;
+````
+
+**Qué hace y por qué:**
+
+Un combo de horas: una etiqueta y un `Select` (átomo de la tarea 1) con las 48 opciones de
+`TIME_OPTIONS`.
+
+- `<label htmlFor={id}>` asocia la etiqueta con el combo: un lector de pantalla lee "Entrada" al
+  entrar al combo, y tocar la etiqueta lo enfoca (sección 12.4).
+- `aria-describedby={describedBy}` apunta al `id` del mensaje de error de la fila, para que el
+  lector de pantalla lo lea junto con el combo.
+- No recibe `value` ni `onChange`: recibe `registration`, que es el objeto que devuelve
+  `register()` de React Hook Form (trae `name`, `onChange`, `onBlur` y `ref`). `{...registration}`
+  lo esparce sobre el `Select`, igual que `{...register('email')}` en los logins (plan, sección
+  8.8). Así el combo queda conectado al formulario sin que este componente sepa cómo se llama el
+  campo ni qué reglas tiene: eso lo decide la fila.
+- Cada `<option>` usa la hora como `key`: es única y no cambia.
+
+#### Archivo 5 de 11 · `DayScheduleRow.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (82 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/components/` |
+| **Archivo** | `DayScheduleRow.jsx` |
+| **Ruta completa** | `src/modules/availabilities/components/DayScheduleRow.jsx` |
+
+````jsx
+import { Controller } from 'react-hook-form';
+import TimeSelect from './TimeSelect';
+import Switch from '../../shared/components/atoms/Switch';
+
+const INVALID_RANGE = 'La hora de entrada debe ser anterior a la de salida';
+
+// One week day: Active/Inactive switch plus start and end times.
+// The times are disabled while the day is inactive. Below `lg` each day is a
+// card; from `lg` the seven days read as a table (spec 12.2).
+function DayScheduleRow({
+  index,
+  day,
+  label,
+  active,
+  error,
+  register,
+  control,
+}) {
+  const id = `day-${day.toLowerCase()}`;
+  const errorId = error ? `${id}-error` : undefined;
+  const field = (name) => `rows.${index}.${name}`;
+
+  // Times are "HH:mm", so a string comparison orders them.
+  const endRules = {
+    validate: (endTime, values) => {
+      const row = values.rows[index];
+
+      return !row.active || row.startTime < endTime || INVALID_RANGE;
+    },
+  };
+
+  return (
+    <div className="flex flex-col gap-2 p-4 rounded-lg border border-med-border-subtle lg:p-0 lg:py-3 lg:rounded-none lg:border-0 lg:border-b lg:last:border-b-0">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+        <div className="flex items-center justify-between lg:w-48 gap-3">
+          <span className="text-sm font-semibold text-med-text-main">
+            {label}
+          </span>
+          {/* The switch is not a native input, so it goes through Controller.
+              `deps` re-validates the end time when the day is turned on/off. */}
+          <Controller
+            name={field('active')}
+            control={control}
+            rules={{ deps: field('endTime') }}
+            render={({ field: { value, onChange } }) => (
+              <Switch checked={value} label={label} onChange={onChange} />
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 flex-1">
+          <TimeSelect
+            id={`${id}-start`}
+            label="Entrada"
+            disabled={!active}
+            invalid={Boolean(error)}
+            describedBy={errorId}
+            registration={register(field('startTime'), {
+              deps: field('endTime'),
+            })}
+          />
+          <TimeSelect
+            id={`${id}-end`}
+            label="Salida"
+            disabled={!active}
+            invalid={Boolean(error)}
+            describedBy={errorId}
+            registration={register(field('endTime'), endRules)}
+          />
+        </div>
+      </div>
+
+      {error && (
+        <p id={errorId} className="text-xs text-red-500 font-medium">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default DayScheduleRow;
+````
+
+**Qué hace y por qué:**
+
+Una fila del formulario: el nombre del día, el interruptor Activo/Inactivo y las dos horas. Acá
+viven las reglas de la fila, escritas con React Hook Form (plan, sección 8.8).
+
+- Props: `index` (la posición de la fila: 0 es lunes), `day` (el código, `'MIERCOLES'`), `label`
+  (`'Miércoles'`), `active` (si el día está activo, para deshabilitar las horas), `error` (el
+  mensaje de la fila, si hay), y `register` y `control`, que le pasa el formulario.
+- `id` sale del código del día (`'day-miercoles'`), así cada combo tiene un `id` único en la página
+  (`day-miercoles-start`, `day-miercoles-end`).
+- `field(name)` arma el nombre del campo dentro del formulario: con `index` 2, `field('endTime')`
+  da `'rows.2.endTime'`. React Hook Form entiende esos puntos como "fila 2 del array `rows`, campo
+  `endTime`".
+- **`endRules`** es la regla de la hora de salida (P5, tabla 11.1). `validate` recibe el valor del
+  campo (`endTime`) y **todos** los valores del formulario (`values`), así puede mirar la fila
+  entera (`values.rows[index]`). Devuelve `true` si el día está inactivo (`!row.active`: un día
+  apagado no se valida) o si la entrada es anterior a la salida; si no, devuelve el mensaje "La
+  hora de entrada debe ser anterior a la de salida". Comparar textos alcanza porque las horas son
+  `'HH:mm'`: `'09:00' < '13:00'`.
+- **El interruptor con `Controller`** (líneas 41 a 48). `Switch` (átomo de la tarea 1) es un botón
+  con `role="switch"` y `aria-checked`, no un `<input>`, así que no se le puede esparcir
+  `register`. `Controller` recibe el nombre del campo y el `control` del formulario, y en `render`
+  le da al componente `value` (el valor actual) y `onChange` (la función para cambiarlo).
+  `rules={{ deps: field('endTime') }}`: cuando cambia el interruptor, React Hook Form vuelve a
+  validar la hora de salida de ese día. Por eso, si apagás un día con error, el error se va.
+- **La hora de entrada** se registra con `deps` sobre la hora de salida: al cambiar la entrada se
+  vuelve a validar la salida, y el error se va apenas lo corregís. **La hora de salida** se
+  registra con `endRules`. Las dos le pasan a `TimeSelect` lo que devuelve `register(...)`.
+- `disabled={!active}`: con el día inactivo, las horas no se pueden tocar (P5, reglas).
+- Si la fila tiene error, se marcan los dos combos (`invalid`) y se muestra el mensaje debajo, con
+  el `id` al que apunta su `aria-describedby`.
+- Responsive (sección 12.2: en el celular "cada día es una tarjeta con sus dos horas"; desde `lg:`,
+  "tabla de siete filas"). Debajo de 1024 px cada día es una tarjeta con borde redondeado
+  (`p-4 rounded-lg border`), con el día y su interruptor arriba y las dos horas abajo, en dos
+  columnas (`grid grid-cols-2`). Desde `lg:` se sacan el relleno, el redondeo y el borde
+  (`lg:p-0 lg:rounded-none lg:border-0`), queda solo una línea abajo (`lg:border-b`, menos en la
+  última: `lg:last:border-b-0`) y todo va en una línea (`lg:flex-row`): las siete filas se leen
+  como una tabla.
+
+#### Archivo 6 de 11 · `WeekScheduleForm.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (79 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/components/` |
+| **Archivo** | `WeekScheduleForm.jsx` |
+| **Ruta completa** | `src/modules/availabilities/components/WeekScheduleForm.jsx` |
+
+````jsx
+import { useForm } from 'react-hook-form';
+import DayScheduleRow from './DayScheduleRow';
+import { WEEK_DAYS, toPayloadDays } from '../utils/schedule';
+import Button from '../../shared/components/atoms/Button';
+import Alert from '../../shared/components/molecules/Alert';
+
+const DAYS_REQUIRED = 'Tenés que activar al menos un día de atención';
+
+// Seven rows, one range per day, handled by React Hook Form (spec 11.2).
+// `initialRows` follows WEEK_DAYS order, so row `index` is WEEK_DAYS[index].
+// The page remounts the form (key) when a new schedule arrives, so
+// `initialRows` only seeds the default values.
+function WeekScheduleForm({
+  initialRows,
+  submitLabel,
+  errorMessage,
+  onSubmit,
+  onCancel,
+}) {
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitted, isSubmitting },
+  } = useForm({ defaultValues: { rows: initialRows } });
+
+  const rows = watch('rows');
+  // A rule over the whole week, not over one field: computed from the
+  // watched values and checked before sending.
+  const noActiveDay = !rows.some((row) => row.active);
+
+  const submit = async (values) => {
+    if (noActiveDay) {
+      return;
+    }
+
+    await onSubmit(toPayloadDays(values.rows));
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit(submit)}
+      noValidate
+      className="flex flex-col gap-4"
+    >
+      {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
+      {isSubmitted && noActiveDay && (
+        <Alert tone="error">{DAYS_REQUIRED}</Alert>
+      )}
+
+      <div className="flex flex-col gap-3 lg:gap-0">
+        {WEEK_DAYS.map(({ code, label }, index) => (
+          <DayScheduleRow
+            key={code}
+            index={index}
+            day={code}
+            label={label}
+            active={rows[index].active}
+            error={errors.rows?.[index]?.endTime?.message}
+            register={register}
+            control={control}
+          />
+        ))}
+      </div>
+
+      <div className="flex flex-col-reverse lg:flex-row lg:justify-end gap-2">
+        <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
+          Cancelar
+        </Button>
+        <Button type="submit" loading={isSubmitting}>
+          {submitLabel}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export default WeekScheduleForm;
+````
+
+**Qué hace y por qué:**
+
+El formulario de la semana: las siete filas y los botones "Cancelar" y "Guardar disponibilidad".
+Es presentacional: no llama al backend, le pasa los días a la página con `onSubmit`. Usa React
+Hook Form, como todos los formularios (sección 11.2; plan, sección 8.8).
+
+- `useForm({ defaultValues: { rows: initialRows } })`: el formulario tiene un solo campo, `rows`,
+  que es el array de las siete filas (`{ day, active, startTime, endTime }`). `initialRows` viene en
+  el orden de `WEEK_DAYS`, así que la fila `index` es el día `WEEK_DAYS[index]` (comentario de las
+  líneas 9 a 12).
+- **Cuándo aparecen los errores.** Acá no se pasa `mode`, así que React Hook Form usa sus valores
+  por defecto: `mode: 'onSubmit'` (no valida nada hasta el primer intento de guardar) y
+  `reValidateMode: 'onChange'` (después de ese intento, revalida cada vez que cambia un campo). O
+  sea: no aparece un error rojo antes de que el usuario toque "Guardar", y una vez que lo tocó, el
+  error se va apenas lo corrige.
+- `watch('rows')` devuelve los valores actuales de las filas y hace que el componente se vuelva a
+  dibujar cuando cambian. Se usa para dos cosas: pasarle a cada fila si está activa
+  (`rows[index].active`) y calcular `noActiveDay`.
+- **`noActiveDay`** (líneas 29 a 31) es la regla "al menos un día activo" (P5, tabla 11.1). Es
+  sobre la semana entera, no sobre un campo, así que no va en ningún `register`: se calcula con
+  los valores observados. `rows.some((row) => row.active)` es `true` si hay al menos una activa.
+- **`submit(values)`**: `handleSubmit(submit)` primero corre las reglas de los campos (la de cada
+  hora de salida); si alguna falla, `submit` ni se llama. Si pasan, `submit` mira `noActiveDay`: sin
+  ningún día activo, no manda nada. Si hay, llama a `onSubmit` con `toPayloadDays(values.rows)`
+  (solo los días activos). `handleSubmit` además evita que el navegador recargue la página al
+  enviar el `<form>`.
+- `isSubmitted` se vuelve `true` con el primer intento de guardar. La alerta "Tenés que activar al
+  menos un día de atención" se muestra solo con `isSubmitted && noActiveDay`: aparece al intentar
+  guardar y, como `noActiveDay` se recalcula en cada dibujado, desaparece en cuanto activás un día.
+- `isSubmitting` es `true` mientras se espera a `onSubmit` (el `await`): "Guardar" muestra el
+  spinner y "Cancelar" queda deshabilitado.
+- El error de cada fila sale de `errors.rows?.[index]?.endTime?.message`: React Hook Form guarda
+  los errores con la misma forma que los valores. Los `?.` evitan que se rompa cuando no hay
+  errores.
+- `initialRows` solo se usa como valores iniciales. Por eso la página vuelve a montar el
+  formulario (con una `key` nueva) cuando llega otra agenda.
+- Botones: "Cancelar" con `variant="secondary"` (cancelar o volver, sección 10) y "Guardar" con la
+  variante por defecto, `primary`. `flex-col-reverse lg:flex-row`: debajo de 1024 px van uno abajo
+  del otro, con "Guardar" **arriba** (el orden se invierte); desde `lg:`, uno al lado del otro a la
+  derecha.
+
+#### Archivo 7 de 11 · `DoctorPicker.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (30 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/components/` |
+| **Archivo** | `DoctorPicker.jsx` |
+| **Ruta completa** | `src/modules/availabilities/components/DoctorPicker.jsx` |
+
+````jsx
+import Select from '../../shared/components/atoms/Select';
+import FormField from '../../shared/components/molecules/FormField';
+
+// Doctor combo of P5. `value` is '' when no doctor is selected.
+function DoctorPicker({ doctors, value, onChange }) {
+  const empty = doctors.length === 0;
+
+  return (
+    <FormField
+      id="availability-doctor"
+      label="Seleccionar profesional"
+      hint={empty ? 'Todavía no hay médicos cargados' : undefined}
+    >
+      <Select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={empty}
+      >
+        <option value="">Seleccioná un profesional</option>
+        {doctors.map((doctor) => (
+          <option key={doctor.id} value={doctor.id}>
+            {doctor.name}
+          </option>
+        ))}
+      </Select>
+    </FormField>
+  );
+}
+
+export default DoctorPicker;
+````
+
+**Qué hace y por qué:**
+
+El combo "Seleccionar profesional". Usa `FormField` (molécula de la tarea 1), que le pone al
+`Select` el `id`, la etiqueta y el `aria-describedby` del texto de ayuda.
+
+- La primera opción, `value=""`, es "Seleccioná un profesional": así el combo puede estar sin
+  médico elegido.
+- Si no hay médicos, el combo queda deshabilitado con la ayuda "Todavía no hay médicos cargados".
+- Cada médico es una opción: `value` es su `id` y se ve su `name`.
+- Avisa con `onChange(id)`; no sabe nada de la URL.
+
+#### Archivo 8 de 11 · `MonthPicker.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (19 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/components/` |
+| **Archivo** | `MonthPicker.jsx` |
+| **Ruta completa** | `src/modules/availabilities/components/MonthPicker.jsx` |
+
+````jsx
+import Select from '../../shared/components/atoms/Select';
+import FormField from '../../shared/components/molecules/FormField';
+
+// Month combo of P5: current month plus the next 12 (see monthOptions).
+function MonthPicker({ months, value, onChange }) {
+  return (
+    <FormField id="availability-month" label="Mes">
+      <Select value={value} onChange={(event) => onChange(event.target.value)}>
+        {months.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </Select>
+    </FormField>
+  );
+}
+
+export default MonthPicker;
+````
+
+**Qué hace y por qué:**
+
+El combo "Mes". Recibe la lista de `monthOptions()` y muestra el `label` de cada una
+("Noviembre de 2026"); el valor es `'2026-11'`.
+
+#### Archivo 9 de 11 · `DoctorSummary.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (16 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/components/` |
+| **Archivo** | `DoctorSummary.jsx` |
+| **Ruta completa** | `src/modules/availabilities/components/DoctorSummary.jsx` |
+
+````jsx
+// Card of the selected doctor: name, license and specialty.
+function DoctorSummary({ doctor }) {
+  return (
+    <div className="flex flex-col gap-1 p-4 rounded-lg bg-med-primary-50 border border-med-border">
+      <p className="font-semibold text-med-primary-900">{doctor.name}</p>
+      <p className="text-xs text-med-text-sub">
+        Matrícula: {doctor.licenseNumber ?? '-'}
+      </p>
+      <p className="text-xs text-med-text-sub">
+        Especialidad: {doctor.specialty?.name ?? 'Sin especialidad'}
+      </p>
+    </div>
+  );
+}
+
+export default DoctorSummary;
+````
+
+**Qué hace y por qué:**
+
+La tarjeta del médico elegido: nombre, matrícula y especialidad (P5, elementos). Dos casos borde
+del contrato (P3): la matrícula puede venir `null` y se muestra un guion; la especialidad puede
+venir `null` (fue dada de baja) y se muestra "Sin especialidad". `doctor.specialty?.name ?? '…'`
+dice "si `specialty` existe, su `name`; si no, el texto".
+
+#### Archivo 10 de 11 · `AvailabilityPage.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (181 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/availabilities/pages/` |
+| **Archivo** | `AvailabilityPage.jsx` |
+| **Ruta completa** | `src/modules/availabilities/pages/AvailabilityPage.jsx` |
+
+````jsx
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import DoctorPicker from '../components/DoctorPicker';
+import DoctorSummary from '../components/DoctorSummary';
+import MonthPicker from '../components/MonthPicker';
+import WeekScheduleForm from '../components/WeekScheduleForm';
+import useDoctorAvailability from '../hooks/useDoctorAvailability';
+import {
+  createAvailability,
+  updateAvailability,
+} from '../services/availabilitiesService';
+import { monthOptions, toRows } from '../utils/schedule';
+import useDoctorOptions from '../../shared/hooks/useDoctorOptions';
+import Card from '../../shared/components/atoms/Card';
+import Spinner from '../../shared/components/atoms/Spinner';
+import Alert from '../../shared/components/molecules/Alert';
+
+const LIST_PATH = '/admin/doctors';
+const BASE_PATH = '/admin/doctors/availability';
+const SAVED_MESSAGE = 'Disponibilidad guardada';
+
+function LoadingBlock() {
+  return (
+    <div className="flex justify-center py-10 text-med-primary-700">
+      <Spinner size="lg" />
+    </div>
+  );
+}
+
+// /admin/doctors/availability and /admin/doctors/:id/availability (CU02).
+// Empty schedule for the month -> create mode (POST); otherwise edit (PUT).
+function AvailabilityPage() {
+  const { id: doctorId } = useParams();
+  const navigate = useNavigate();
+  const months = useMemo(() => monthOptions(), []);
+  const [monthValue, setMonthValue] = useState(months[0].value);
+  const [notice, setNotice] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const doctors = useDoctorOptions();
+  const selectedMonth = months.find((option) => option.value === monthValue);
+  const { year, month } = selectedMonth;
+  const schedule = useDoctorAvailability(doctorId, year, month);
+
+  const doctor = doctors.options.find((option) => option.id === doctorId);
+  const unknownDoctor = Boolean(doctorId) && !doctors.loading && !doctor;
+  const isEdit = schedule.availabilities.length > 0;
+  const { rows, hasExtraRanges } = useMemo(
+    () => toRows(schedule.availabilities),
+    [schedule.availabilities]
+  );
+
+  const clearMessages = () => {
+    setNotice('');
+    setErrorMessage('');
+  };
+
+  // The selected doctor lives in the URL, so the page can be linked from P3.
+  const selectDoctor = (value) => {
+    clearMessages();
+    navigate(value ? `${LIST_PATH}/${value}/availability` : BASE_PATH, {
+      replace: true,
+    });
+  };
+
+  const selectMonth = (value) => {
+    clearMessages();
+    setMonthValue(value);
+  };
+
+  const handleSubmit = async (days) => {
+    clearMessages();
+    const body = { doctorId, days, year, month };
+
+    try {
+      if (isEdit) {
+        await updateAvailability(body);
+      } else {
+        await createAvailability(body);
+      }
+
+      setNotice(SAVED_MESSAGE);
+      schedule.reload();
+    } catch (apiError) {
+      setErrorMessage(apiError.message);
+    }
+  };
+
+  const showForm =
+    doctor && !schedule.loading && !schedule.error && schedule.version > 0;
+
+  return (
+    <div className="flex flex-col gap-6 max-w-3xl">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-med-text-main">
+          Disponibilidad horaria
+        </h1>
+        <p className="text-sm text-med-text-sub mt-1">
+          Configure los días y horarios de atención de cada profesional por mes.
+        </p>
+      </div>
+
+      <Card padded={false} className="p-6 flex flex-col gap-5">
+        {doctors.loading && <LoadingBlock />}
+
+        {doctors.error && <Alert tone="error">{doctors.error.message}</Alert>}
+
+        {!doctors.loading && !doctors.error && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <DoctorPicker
+              doctors={doctors.options}
+              value={doctor ? doctorId : ''}
+              onChange={selectDoctor}
+            />
+            <MonthPicker
+              months={months}
+              value={monthValue}
+              onChange={selectMonth}
+            />
+          </div>
+        )}
+
+        {unknownDoctor && (
+          <Alert tone="error">El médico indicado no existe</Alert>
+        )}
+
+        {doctor && <DoctorSummary doctor={doctor} />}
+      </Card>
+
+      {doctor && (
+        <Card padded={false} className="p-6 flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-bold text-med-primary-900">
+              Horario semanal
+            </h2>
+            {showForm && (
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-med-primary-100 text-med-primary-700">
+                {isEdit ? 'Editando agenda' : 'Nueva agenda'}
+              </span>
+            )}
+          </div>
+
+          <Alert tone="info">
+            Los cambios se aplican de inmediato a los horarios libres. Los
+            turnos ya reservados no se modifican. Se generan turnos de 30
+            minutos desde hoy hasta fin de mes (o desde el día 1 si el mes es
+            futuro), salteando los feriados.
+          </Alert>
+
+          {notice && <Alert tone="success">{notice}</Alert>}
+
+          {hasExtraRanges && showForm && (
+            <Alert tone="info">
+              Este mes tiene más de un horario en algún día. Se muestra el
+              primero; al guardar se reemplazan todos.
+            </Alert>
+          )}
+
+          {schedule.loading && <LoadingBlock />}
+
+          {schedule.error && (
+            <Alert tone="error">{schedule.error.message}</Alert>
+          )}
+
+          {showForm && (
+            <WeekScheduleForm
+              key={`${doctorId}-${monthValue}-${schedule.version}`}
+              initialRows={rows}
+              submitLabel="Guardar disponibilidad"
+              errorMessage={errorMessage}
+              onSubmit={handleSubmit}
+              onCancel={() => navigate(LIST_PATH)}
+            />
+          )}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+export default AvailabilityPage;
+````
+
+**Qué hace y por qué:**
+
+La página (el **contenedor**): junta todo y decide qué pasa. Atiende las dos URLs:
+`/admin/doctors/availability` (sin médico) y `/admin/doctors/:id/availability`.
+
+- `const { id: doctorId } = useParams()` lee el `:id` de la URL y lo llama `doctorId` (plan,
+  sección 8.9). Sin `:id`, es `undefined`.
+- `useMemo(() => monthOptions(), [])`: `useMemo` guarda el resultado de un cálculo y solo lo repite
+  cuando cambian sus dependencias. Con `[]`, los meses se calculan una sola vez y no en cada
+  dibujado.
+- `monthValue` arranca en el primer mes (el actual, P5). De ahí salen `year` y `month`.
+- `useDoctorOptions()` (hook de `shared/` de la tarea 1) trae los médicos para el combo
+  (`GET /api/doctors?pageSize=100`, como dice P5).
+- `doctor` es el médico de la URL, buscado en esa lista. `unknownDoctor` es `true` si la URL trae
+  un `id` que no está (cuando la lista ya cargó): muestra "El médico indicado no existe".
+- `isEdit` es `true` si la agenda del mes trae algo: decide `POST` o `PUT` y la etiqueta "Editando
+  agenda" / "Nueva agenda".
+- `rows` y `hasExtraRanges` salen de `toRows`, también con `useMemo`, para no recalcularlos en cada
+  dibujado.
+- `selectDoctor(value)` no guarda el médico en un estado: **cambia la URL** con `navigate(...,
+  { replace: true })`. El `replace` evita llenar el historial con un paso por cada médico que
+  probaste. Al cambiar la URL cambia `doctorId`, y el hook pide la agenda nueva.
+- `handleSubmit(days)`: arma `{ doctorId, days, year, month }`, llama a `updateAvailability` si
+  `isEdit` o a `createAvailability` si no. Si sale bien, muestra "Disponibilidad guardada" y
+  recarga la agenda (`schedule.reload()`); si falla (por ejemplo `409` `AVAILABILITY_OVERLAP`),
+  muestra el `message` del `ApiError` arriba del formulario (P5, casos borde).
+- `showForm`: el formulario se muestra solo si hay médico, la agenda no está cargando, no hubo error
+  y **ya hubo al menos una carga buena** (`schedule.version > 0`). Lo último importa: en el primer
+  dibujado el hook todavía no arrancó (`loading` empieza en `false` y la lista vacía), y sin esa
+  condición aparecería un instante un formulario vacío en modo "Nueva agenda" aunque el médico ya
+  tuviera agenda.
+- `key={`${doctorId}-${monthValue}-${schedule.version}`}`: la `key` no es solo para listas. Si
+  cambia, React **descarta el componente y crea uno nuevo**, con su estado desde cero. Cambia
+  cuando cambia el médico, el mes, o cuando llega una carga nueva (por ejemplo, después de guardar),
+  y el formulario arranca con las filas frescas.
+- El aviso azul es el texto correcto de P5 (el del mockup, "a partir de la próxima semana", es
+  falso con este backend), más lo que hace el backend al guardar: turnos de 30 minutos desde hoy
+  hasta fin de mes, salteando feriados.
+- `LoadingBlock` es un componente chico definido en el mismo archivo porque solo lo usa esta
+  página.
+- Responsive: los dos combos van uno abajo del otro en el celular y la tablet, y uno al lado del
+  otro desde 1024 px (`grid-cols-1 lg:grid-cols-2`).
+
+#### Archivo 11 de 11 · `router.jsx`
+
+| **Qué hacer** | **Modificar** 2 lugares del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/` |
+| **Archivo** | `router.jsx` |
+| **Ruta completa** | `src/router.jsx` |
+
+**Líneas 19 a 25** (en el archivo ya modificado):
+
+````diff
+@@ -19,6 +19,7 @@ import OverviewPage from './modules/dashboard/pages/OverviewPage';
+ // Domain Modules (Screaming Architecture)
+ import DoctorsPage from './modules/doctors/pages/DoctorsPage';
+ import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
++import AvailabilityPage from './modules/availabilities/pages/AvailabilityPage';
+ import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
+ 
+ const routes = [
+````
+
+**Líneas 75 a 88** (en el archivo ya modificado):
+
+````diff
+@@ -74,6 +75,14 @@ const routes = [
+             path: 'home',
+             element: <OverviewPage />,
+           },
++          {
++            path: 'doctors/availability',
++            element: <AvailabilityPage />,
++          },
++          {
++            path: 'doctors/:id/availability',
++            element: <AvailabilityPage />,
++          },
+           {
+             path: 'doctors',
+             element: <DoctorsPage />,
+````
+
+**Qué hace y por qué:**
+
+Se agregan el import de `AvailabilityPage` y las dos rutas, **en el lugar que dejó la tarea 2**:
+las rutas entre `home` y `doctors`, y el import después de `AppointmentsSearchPage`. No las pongas
+en otro lado: así tu PR no choca con los de las tareas 3 y 4 (ver tarea 2, "Por qué así").
+
+### Cómo probarlo
+
+Backend y front corriendo (plan, sección 3). Entrá como admin (`admin@system.com` /
+`Admin1234!`). Hace falta al menos un médico: si todavía no está mergeada la tarea 4, crealo desde
+Swagger con `POST /api/doctors` (cómo usar Swagger con el token: `09-ENTORNO.md`, sección 5).
+
+**Caso feliz**
+
+1. Entrá a `http://localhost:5173/admin/doctors/availability`. Ves el combo "Seleccionar
+   profesional" y "Mes" en el mes actual. No hay formulario todavía.
+2. Elegí un médico sin agenda: la URL pasa a `/admin/doctors/<id>/availability`, aparece la
+   tarjeta con su nombre, matrícula y especialidad, y el formulario con la etiqueta "Nueva agenda"
+   y los siete días inactivos.
+3. Activá lunes y miércoles; con el día inactivo, las horas están deshabilitadas. Elegí horas:
+   solo hay opciones cada 30 minutos.
+4. "Guardar disponibilidad": aparece "Disponibilidad guardada" y la etiqueta pasa a "Editando
+   agenda" con los dos días cargados.
+5. Cambiá el horario del lunes y guardá de nuevo (ahora es un `PUT`). En F12 → **Network** podés
+   ver el `POST` del paso 4 y el `PUT` de este.
+6. Recargá con F5: sigue el mismo médico (está en la URL) y los horarios que guardaste.
+7. Elegí el mes siguiente: está en "Nueva agenda" (cada mes es independiente). Volvé al actual:
+   está tu agenda.
+8. "Cancelar" te lleva a `/admin/doctors`.
+
+**Errores**
+
+1. Desactivá todos los días y guardá: "Tenés que activar al menos un día de atención", y en
+   **Network** no sale ningún pedido. Activá un día: la alerta desaparece sola.
+2. Un día con entrada `13:00` y salida `09:00` (o las dos iguales): antes de guardar no aparece
+   nada; al tocar "Guardar disponibilidad", "La hora de entrada debe ser anterior a la de salida"
+   debajo de ese día, y no se manda nada. Corregí la entrada: el error se va solo. Volvé a
+   provocarlo y apagá ese día: el error también se va.
+3. `http://localhost:5173/admin/doctors/00000000-0000-0000-0000-000000000000/availability`: "El
+   médico indicado no existe".
+4. Apagá el backend y recargá: "No se pudo conectar con el servidor".
+5. **Sesión vencida** (prueba pendiente de la tarea 2): en F12 → Application → Session Storage,
+   editá el `token` de `medportal.session` y cambiale unas letras. Elegí otro mes: el backend
+   responde `401`, la sesión se borra y volvés a `/admin/login` con el aviso "Tenés que iniciar
+   sesión". Si dejás pasar los 60 minutos que dura el token (sección 5.3) el aviso es "Tu sesión
+   expiró. Volvé a ingresar".
+
+**360 px:** cada día es una tarjeta con borde, con el nombre y el interruptor arriba y las dos
+horas abajo; los botones van uno abajo del otro, "Guardar disponibilidad" arriba. No hay
+desplazamiento horizontal. Desde 1024 px los siete días se ven como las filas de una tabla.
+
+### Commit
+
+````text
+feat(availabilities): agregar agenda semanal del médico
+
+Agenda por mes con horarios cada 30 minutos: alta con POST y reemplazo con PUT.
+
+````
+
+```bash
+git add -A
+git status          # tienen que aparecer SOLO los 11 archivos de la tabla
+git commit          # se abre el editor: pegá el mensaje de arriba, guardá y cerrá
+git push -u origin feat/doctor-availability
+```
+
+---
+
+## Tarea 6 — Tablero del administrador
+
+| | |
+|---|---|
+| **Responsable** | Nicolás |
+| **Rama** | `feat/admin-dashboard` |
+| **Sale de** | `development` con las tareas 1 y 2 mergeadas |
+| **Pantallas / Referencia** | P2 (panel del administrador) · 7.2 (fechas y zona horaria) · 7.4 (buscador por nombre) · 7.6 y decisión D39 (Con agenda / Sin agenda) · 12.2 (tablas y tarjetas en el celular) de `15-ESPECIFICACION-FRONT.md` |
+| **Archivos** | 5: 4 nuevos, 1 se modifica |
+
+Escribilos **en este orden** (es el orden en que aparecen abajo, cada uno con su número):
+
+| # | Ruta completa | Qué hacer | Líneas |
+|---|---|---|---|
+| 1 | `src/modules/dashboard/services/dashboardService.js` | Crear | +22 −0 |
+| 2 | `src/modules/dashboard/hooks/useTotal.js` | Crear | +38 −0 |
+| 3 | `src/modules/dashboard/components/DashboardStats.jsx` | Crear | +37 −0 |
+| 4 | `src/modules/dashboard/components/DoctorsDirectory.jsx` | Crear | +137 −0 |
+| 5 | `src/modules/dashboard/pages/OverviewPage.jsx` | Reemplazar todo | +21 −242 |
+
+### Qué problema resuelve
+
+El tablero del boilerplate (`src/modules/dashboard/pages/OverviewPage.jsx` en `development`) es
+**una foto**: los números están escritos a mano ("124" doctores activos, "32" especialidades), con
+adornos que no salen de ningún dato ("+4 este mes", "Estable", "Hoy"), y la tabla muestra tres
+médicos inventados ("Dr. James Wilson", "Dr. Elena Rodriguez", "Dr. Robert Chen") con un estado
+"Activo / De Licencia" que el modelo no tiene. El pie dice "Mostrando 3 de 124 registros" siempre.
+Los botones "Agregar Nuevo Doctor" y "Agregar Nueva Especialidad" van a los listados, no a los
+formularios de alta. Todo está escrito adentro de la página, con los SVG copiados en línea.
+
+### Por qué así
+
+- **Cada tarjeta carga por separado** (P2, estados). Si falla el pedido de una, esa muestra un
+  guion y las otras dos siguen bien. Por eso cada tarjeta llama a su propio `useTotal`, en vez de
+  un solo hook que pida los tres números y falle entero.
+- **Los totales piden `pageSize=1`** (P2, datos). Todos los listados del backend devuelven
+  `{ total, data, … }`. Solo se necesita `total`, así que se pide la página más chica posible y el
+  navegador no descarga listas enteras para contar.
+- **"Turnos confirmados para hoy" manda siempre `date` con la fecha local** (sección 7.2). Sin
+  `date`, el backend usa el día UTC, que después de las 21:00 de Argentina ya es mañana. La fecha la
+  arma `todayIso()` de `shared/utils/dates.js` (tarea 1), el único lugar donde se convierten fechas.
+- **El directorio usa los hooks compartidos** `useDoctors` y `usePagination` (tarea 1). Están en
+  `shared/` justamente porque los usan el listado de médicos (tarea 4) y este tablero (plan,
+  sección 9, regla 1). El tablero no importa nada de `doctors/`.
+- **`dashboardService.js` vive en `dashboard/`** porque el pedido de turnos por fecha con estado,
+  pidiendo solo el total, lo usa solo el tablero. Si otra funcionalidad lo necesitara, subiría a
+  `shared/`.
+- **La página se parte en componentes** (B13): `OverviewPage` solo arma el encabezado y pone
+  `DashboardStats` y `DoctorsDirectory`. Cada uno se entiende solo.
+- **Estado de disponibilidad: "Con agenda / Sin agenda"**, a partir de `hasAvailability` (decisión
+  D39), con la función `availabilityInfo` de `shared/constants/doctorStatus.js` (tarea 1), la misma
+  que usa el listado de médicos. Así los dos muestran el mismo texto y el mismo color.
+- **Cada médico tiene un solo botón: "Ver detalle", que lleva a la página de doctores**
+  (`/admin/doctors`). Es lo que pide el enunciado del TFI (v1.4, "Admin - Página Principal": "Ver
+  detalle lleva a la página de doctores"). No hay edición ni agenda desde el tablero: la edición de
+  médicos dejó de ser obligatoria y la agenda se carga con el botón "Agregar disponibilidad
+  horaria" del listado de médicos.
+
+### Qué afecta
+
+- **Los botones del encabezado** van a `/admin/doctors/new` ("Agregar nuevo doctor", tarea 4) y a
+  `/admin/specialties/new` ("Agregar nueva especialidad", tarea 3). **"Ver detalle"** de cada
+  médico va a `/admin/doctors`, que existe desde el boilerplate. Esta tarea se hace en paralelo con
+  la 3 y la 4: hasta que se mergean, las URLs de los formularios de alta no existen, caen en la
+  ruta `*`, van a `/` y la guarda te devuelve a `/admin/home`. Es lo esperable: en el orden de
+  merge (`3 → 4 → 5 → 6`), cuando se mergea esta, las dos ya están.
+- **Qué cambia para el usuario:** el tablero muestra los números reales y el directorio de
+  médicos real, con búsqueda y paginación.
+- **Qué NO se toca:** ni `shared/` ni el menú (`Sidebar`, `DashboardLayout`, de la tarea 2) ni el
+  router: `/admin/home` ya existía y sigue apuntando a `OverviewPage`.
+
+### Código, archivo por archivo
+
+#### Archivo 1 de 5 · `dashboardService.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (22 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/services/` |
+| **Archivo** | `dashboardService.js` |
+| **Ruta completa** | `src/modules/dashboard/services/dashboardService.js` |
+
+````js
+import { instance } from '../../shared/api/axiosInstance';
+
+// GET /api/appointments?date&status&pageSize&pageIndex. `date` is always sent:
+// without it the backend uses the UTC day (spec 7.2).
+async function getAppointmentsByDate({
+  date,
+  status,
+  pageIndex = 1,
+  pageSize = 10,
+}) {
+  const params = { date, pageIndex, pageSize };
+
+  if (status) {
+    params.status = status;
+  }
+
+  const response = await instance.get('api/appointments', { params });
+
+  return response.data;
+}
+
+export { getAppointmentsByDate };
+````
+
+**Qué hace y por qué:**
+
+La capa **service** (plan, sección 8.6). Una sola función: `getAppointmentsByDate`, que llama a
+`GET /api/appointments?date&status&pageSize&pageIndex`.
+
+- Los parámetros tienen valores por defecto (`pageIndex = 1`, `pageSize = 10`).
+- `status` se agrega solo si viene: un parámetro vacío no se manda.
+- `date` va siempre (sección 7.2, ver "Por qué así").
+
+#### Archivo 2 de 5 · `useTotal.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (38 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/hooks/` |
+| **Archivo** | `useTotal.js` |
+| **Ruta completa** | `src/modules/dashboard/hooks/useTotal.js` |
+
+````js
+import { useEffect, useState } from 'react';
+
+// Loads one `total` for a stat card. Each card calls it on its own, so a
+// failing call only affects its card (spec P2). `load` must be stable.
+function useTotal(load) {
+  const [total, setTotal] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    load()
+      .then((result) => {
+        if (!ignore) {
+          setTotal(result.total);
+        }
+      })
+      .catch((apiError) => {
+        if (!ignore) {
+          setError(apiError);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [load]);
+
+  return { total, loading, error };
+}
+
+export default useTotal;
+````
+
+**Qué hace y por qué:**
+
+Hook propio (plan, sección 8.5) que carga **un** número para **una** tarjeta.
+
+- Recibe `load`: una función que hace el pedido y devuelve una promesa con `{ total, … }`. Así el
+  mismo hook sirve para las tres tarjetas: cada una le pasa su pedido.
+- Es el patrón de carga de siempre (plan, sección 8.4): `useEffect` con la bandera `ignore` y los
+  tres estados `total`, `loading` y `error`.
+- **`load` tiene que ser estable** (comentario de la línea 4). Está en las dependencias del efecto
+  (`[load]`): si fuera una función nueva en cada dibujado, el efecto se repetiría en cada dibujado
+  y pediría el número una y otra vez. Por eso las tres funciones `load…` están definidas **afuera**
+  del componente, en `DashboardStats.jsx`: se crean una sola vez.
+
+#### Archivo 3 de 5 · `DashboardStats.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (37 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/components/` |
+| **Archivo** | `DashboardStats.jsx` |
+| **Ruta completa** | `src/modules/dashboard/components/DashboardStats.jsx` |
+
+````jsx
+import useTotal from '../hooks/useTotal';
+import { getAppointmentsByDate } from '../services/dashboardService';
+import StatCard from '../../shared/components/molecules/StatCard';
+import {
+  getDoctors,
+  getSpecialties,
+} from '../../shared/services/catalogService';
+import { todayIso } from '../../shared/utils/dates';
+
+// Only `total` is used, so each call asks for a single row (spec P2).
+const loadDoctors = () => getDoctors({ pageIndex: 1, pageSize: 1 });
+const loadSpecialties = () => getSpecialties({ pageIndex: 1, pageSize: 1 });
+// `date` is today's LOCAL date: without it the backend uses UTC (spec 7.2).
+const loadTodayBooked = () =>
+  getAppointmentsByDate({ date: todayIso(), status: 'BOOKED', pageSize: 1 });
+
+function Stat({ load, ...props }) {
+  const { total, loading, error } = useTotal(load);
+
+  return <StatCard value={total} loading={loading} error={error} {...props} />;
+}
+
+function DashboardStats() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <Stat load={loadDoctors} icon="briefcase" label="Doctores activos" />
+      <Stat load={loadSpecialties} icon="grid" label="Especialidades activas" />
+      <Stat
+        load={loadTodayBooked}
+        icon="calendar"
+        label="Turnos confirmados para hoy"
+      />
+    </div>
+  );
+}
+
+export default DashboardStats;
+````
+
+**Qué hace y por qué:**
+
+Las tres tarjetas de estadística.
+
+- `loadDoctors`, `loadSpecialties` y `loadTodayBooked` son los tres pedidos, definidos a nivel del
+  archivo (ver `useTotal`). Los dos primeros usan `getDoctors` y `getSpecialties` de
+  `shared/services/catalogService.js` (tarea 1) con `pageSize: 1`; el tercero usa
+  `getAppointmentsByDate` con `date: todayIso()`, `status: 'BOOKED'` (turnos reservados) y
+  `pageSize: 1`. Son los endpoints de la tabla de datos de P2.
+- `Stat` es un componente chico del mismo archivo: llama a `useTotal(load)` y dibuja un `StatCard`
+  (molécula de la tarea 1, que ya sabe mostrar el pulso de carga y el guion de error). Hace falta
+  como componente aparte porque un hook se llama una vez por componente, arriba de todo (plan,
+  sección 8.3): para tener tres cargas independientes hacen falta tres componentes.
+- `{...props}` pasa a `StatCard` el resto de las props (`icon`, `label`) sin nombrarlas una por una.
+- Etiquetas de P2: "Doctores activos", "Especialidades activas", "Turnos confirmados para hoy".
+- `grid-cols-1 lg:grid-cols-3`: una tarjeta abajo de la otra en el celular y la tablet, tres en
+  fila desde 1024 px (sección 12.2: "una columna" en el móvil, "tres columnas" desde `lg:`).
+
+#### Archivo 4 de 5 · `DoctorsDirectory.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (137 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/components/` |
+| **Archivo** | `DoctorsDirectory.jsx` |
+| **Ruta completa** | `src/modules/dashboard/components/DoctorsDirectory.jsx` |
+
+````jsx
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Avatar from '../../shared/components/atoms/Avatar';
+import Badge from '../../shared/components/atoms/Badge';
+import Card from '../../shared/components/atoms/Card';
+import EmptyState from '../../shared/components/molecules/EmptyState';
+import SearchInput from '../../shared/components/molecules/SearchInput';
+import TablePagination from '../../shared/components/molecules/TablePagination';
+import DataTable from '../../shared/components/organisms/DataTable';
+import { availabilityInfo } from '../../shared/constants/doctorStatus';
+import useDoctors from '../../shared/hooks/useDoctors';
+import usePagination from '../../shared/hooks/usePagination';
+
+const PAGE_SIZE = 5;
+const ACTION_CLASS =
+  'min-h-11 lg:min-h-0 px-2 py-1.5 rounded-lg text-sm font-semibold text-med-primary-700 transition hover:bg-med-primary-50 hover:text-med-primary-900';
+
+// "Directorio de profesionales médicos" (spec P2): search by name, 5 per
+// page. "Ver detalle" goes to the doctors page (TFI statement v1.4).
+function DoctorsDirectory() {
+  const navigate = useNavigate();
+  const { pageIndex, pageSize, setPageIndex, reset, totalPages } =
+    usePagination(PAGE_SIZE);
+  const [name, setName] = useState('');
+  const { doctors, total, loading, error, reload } = useDoctors({
+    pageIndex,
+    pageSize,
+    name,
+  });
+
+  const handleSearch = useCallback(
+    (term) => {
+      setName(term);
+      reset();
+    },
+    [reset]
+  );
+
+  const columns = [
+    {
+      key: 'name',
+      header: 'Nombre del doctor',
+      render: (doctor) => (
+        <span className="flex items-center gap-3">
+          <Avatar name={doctor.name} />
+          <span className="font-semibold text-med-primary-900">
+            {doctor.name}
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: 'specialty',
+      header: 'Especialidad',
+      render: (doctor) => (
+        <span className="text-med-text-sub">
+          {doctor.specialty?.name ?? 'Sin especialidad'}
+        </span>
+      ),
+    },
+    {
+      key: 'availability',
+      header: 'Estado de disponibilidad',
+      render: (doctor) => {
+        const { label, tone } = availabilityInfo(doctor.hasAvailability);
+
+        return <Badge tone={tone}>{label}</Badge>;
+      },
+    },
+    {
+      key: 'actions',
+      header: 'Acciones',
+      align: 'right',
+      isAction: true,
+      render: (doctor) => (
+        <button
+          type="button"
+          aria-label={`Ver detalle de ${doctor.name}`}
+          onClick={() => navigate('/admin/doctors')}
+          className={ACTION_CLASS}
+        >
+          Ver detalle
+        </button>
+      ),
+    },
+  ];
+
+  const empty = (
+    <EmptyState
+      icon={name ? 'search' : 'inbox'}
+      title={
+        name
+          ? 'No hay médicos que coincidan con la búsqueda'
+          : 'Todavía no hay médicos cargados'
+      }
+    />
+  );
+
+  return (
+    <Card padded={false} className="overflow-hidden border-med-border">
+      <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-med-border">
+        <h2 className="text-base font-bold text-med-primary-900">
+          Directorio de profesionales médicos
+        </h2>
+        <SearchInput
+          id="directory-search"
+          label="Buscar médico por nombre"
+          placeholder="Buscar por nombre..."
+          onSearch={handleSearch}
+          className="w-full sm:w-72"
+        />
+      </div>
+
+      <DataTable
+        caption="Directorio de profesionales médicos"
+        columns={columns}
+        rows={doctors}
+        loading={loading}
+        error={error}
+        onRetry={reload}
+        empty={empty}
+      />
+
+      {!error && total > 0 && (
+        <TablePagination
+          currentPage={pageIndex}
+          totalPages={totalPages(total)}
+          totalItems={total}
+          pageSize={pageSize}
+          onPageChange={setPageIndex}
+        />
+      )}
+    </Card>
+  );
+}
+
+export default DoctorsDirectory;
+````
+
+**Qué hace y por qué:**
+
+El "Directorio de profesionales médicos" (P2): buscador, tabla de 5 médicos por página y
+paginación.
+
+- `usePagination(PAGE_SIZE)` (tarea 1) maneja la página actual; `reset` vuelve a la 1 y
+  `totalPages(total)` calcula cuántas hay.
+- `useDoctors({ pageIndex, pageSize, name })` (tarea 1) pide `GET /api/doctors` con esos
+  parámetros y devuelve `{ doctors, total, loading, error, reload }`. Cuando cambia la página o el
+  nombre, vuelve a pedir solo.
+- **`handleSearch` con `useCallback`.** `SearchInput` (molécula de la tarea 1) tiene un efecto que
+  llama a `onSearch` y tiene a `onSearch` en sus dependencias. Si `handleSearch` fuera una función
+  nueva en cada dibujado, ese efecto correría en cada dibujado y llamaría a `reset()`: al tocar la
+  página 2, el componente se vuelve a dibujar, `reset()` te devuelve a la página 1 y la paginación
+  no anda. Con `useCallback`, la función es siempre la misma (solo cambia si cambia `reset`, que
+  también es estable). `SearchInput` ya trae el `debounce` y solo busca con 3 letras o más (sección
+  7.4).
+- Al buscar, `reset()` vuelve a la página 1: los resultados de una búsqueda nueva empiezan desde el
+  principio.
+- **`columns`** describe la tabla para `DataTable` (organismo de la tarea 1): cada columna tiene
+  `key`, `header` y `render(doctor)`, la función que dibuja la celda.
+  - Nombre: `Avatar` con las iniciales (sin fotos, P2) y el nombre.
+  - Especialidad: "Sin especialidad" si vino `null`.
+  - Estado de disponibilidad: `Badge` con "Con agenda" o "Sin agenda" (`availabilityInfo`, D39).
+  - Acciones (`isAction: true`, alineada a la derecha): un botón de texto "Ver detalle" que
+    navega a `/admin/doctors` (enunciado v1.4). El `aria-label` agrega el nombre del médico ("Ver
+    detalle de …") para que un lector de pantalla distinga un botón de otro (sección 12.4).
+- `ACTION_CLASS`: `min-h-11` hace el botón de 44 px de alto para tocarlo con el dedo; `lg:min-h-0`
+  saca ese mínimo desde 1024 px, donde `DataTable` muestra la tabla y se usa con el mouse.
+- `empty`: lo que muestra la tabla vacía. Si hay búsqueda, "No hay médicos que coincidan con la
+  búsqueda"; si no, "Todavía no hay médicos cargados" (los mismos textos que P3).
+- `DataTable` resuelve los estados: filas grises mientras carga, el mensaje de error con
+  "Reintentar" (que llama a `reload`) y, debajo de 1024 px, cada fila como tarjeta (sección 12.2).
+- `TablePagination` se muestra solo si no hubo error y hay al menos un médico.
+
+#### Archivo 5 de 5 · `OverviewPage.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (273 líneas) y escribí este código (52 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/pages/` |
+| **Archivo** | `OverviewPage.jsx` |
+| **Ruta completa** | `src/modules/dashboard/pages/OverviewPage.jsx` |
+
+````jsx
+import { useNavigate } from 'react-router-dom';
+import DashboardStats from '../components/DashboardStats';
+import DoctorsDirectory from '../components/DoctorsDirectory';
+import Button from '../../shared/components/atoms/Button';
+import Icon from '../../shared/components/atoms/Icon';
+
+// /admin/home: admin dashboard (spec P2).
+function OverviewPage() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-med-text-main">
+            Vista general de gestión
+          </h1>
+          <p className="text-sm text-med-text-sub mt-1">
+            Configure el personal médico y las especialidades del centro.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+          <Button
+            onClick={() => navigate('/admin/doctors/new')}
+            className="min-h-11"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Icon name="plus" />
+              Agregar nuevo doctor
+            </span>
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/admin/specialties/new')}
+            className="min-h-11"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Icon name="plus" />
+              Agregar nueva especialidad
+            </span>
+          </Button>
+        </div>
+      </div>
+
+      <DashboardStats />
+      <DoctorsDirectory />
+    </div>
+  );
+}
+
+export default OverviewPage;
+````
+
+**Qué hace y por qué:**
+
+La página `/admin/home` (P2). Se reemplaza entera: ahora solo arma el encabezado y pone los dos
+componentes.
+
+- Título "Vista general de gestión" y la bajada.
+- Los dos botones navegan a los **formularios de alta** (`/admin/doctors/new` y
+  `/admin/specialties/new`), no a los listados como en el boilerplate (P2, elementos). El ícono
+  `plus` reemplaza el `+` escrito como texto. El primero usa la variante por defecto, `primary`
+  (la acción principal); el segundo, `variant="secondary"` (sección 10).
+- Responsive: `flex-col md:flex-row` en el encabezado (título arriba de los botones en el celular,
+  al lado desde 768 px) y `flex-col sm:flex-row` en los botones (uno abajo del otro en el celular).
+
+### Cómo probarlo
+
+Backend y front corriendo. Entrá como admin (`admin@system.com` / `Admin1234!`): caés en
+`/admin/home`.
+
+**Caso feliz**
+
+1. Las tres tarjetas pulsan un instante y muestran números. Comparalos con Swagger: "Doctores
+   activos" es el `total` de `GET /api/doctors`, "Especialidades activas" el de
+   `GET /api/specialties` y "Turnos confirmados para hoy" el de
+   `GET /api/appointments?date=<hoy>&status=BOOKED`.
+2. En F12 → **Network**, los tres pedidos llevan `pageSize=1`, y el de turnos lleva la fecha de hoy
+   de tu computadora en `date`.
+3. El directorio muestra hasta 5 médicos, con su especialidad y "Con agenda" o "Sin agenda". Con más
+   de 5, pasá de página: la búsqueda no te devuelve a la página 1.
+4. Escribí 3 letras de un nombre: la lista se filtra (con una pequeña demora) y vuelve a la página
+   1. Con 1 o 2 letras no filtra. Escribí algo que no existe: "No hay médicos que coincidan con la
+   búsqueda".
+5. "Ver detalle" en cualquier médico te lleva a `/admin/doctors`. Si ya están mergeadas las
+   tareas 3 y 4: "Agregar nuevo doctor" abre el alta de médico y "Agregar nueva especialidad" el de
+   especialidad. Si no están, esos dos botones te dejan en `/admin/home` (ver "Qué afecta").
+
+**Errores**
+
+1. Apagá el backend y recargá: las tres tarjetas muestran un guion (pasá el mouse: "No se pudo
+   conectar con el servidor") y el directorio muestra el error con "Reintentar". El resto de la
+   pantalla se sigue viendo. Prendé el backend y tocá "Reintentar": el directorio carga.
+2. Sin médicos cargados (base vacía): "Todavía no hay médicos cargados".
+3. **Sesión vencida:** en Session Storage cambiale unas letras al `token` de `medportal.session` y
+   recargá: volvés a `/admin/login` con "Tenés que iniciar sesión".
+
+**360 px:** las tarjetas van una abajo de la otra; el directorio muestra cada médico como una
+tarjeta con sus datos y el botón "Ver detalle" abajo a la derecha, de tamaño tocable; los botones del
+encabezado van a todo el ancho. No hay desplazamiento horizontal.
+
+### Commit
+
+````text
+feat(dashboard): conectar el tablero a totales reales
+
+Tres tarjetas independientes y directorio de médicos con "Ver detalle".
+
+````
+
+```bash
+git add -A
+git status          # tienen que aparecer SOLO los 5 archivos de la tabla
+git commit          # se abre el editor: pegá el mensaje de arriba, guardá y cerrá
+git push -u origin feat/admin-dashboard
+```

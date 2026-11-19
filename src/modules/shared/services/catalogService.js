@@ -1,10 +1,5 @@
 import { instance } from '../api/axiosInstance';
 
-// Paged lists that several features read (spec 3.2: what two or more
-// features need lives in shared/). Both answer { pageSize, pageIndex, total, data }.
-
-// GET /api/doctors?pageSize&pageIndex&name&specialtyId
-// `name` and `specialtyId` are sent only when present (spec 7.4, P10).
 async function getDoctors({
   pageIndex = 1,
   pageSize = 10,

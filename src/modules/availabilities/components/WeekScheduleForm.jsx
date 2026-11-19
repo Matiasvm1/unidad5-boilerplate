@@ -57,7 +57,6 @@ function WeekScheduleForm({
 
       <div className="flex flex-col gap-3 lg:gap-0">
         {' '}
-        //
         {WEEK_DAYS.map(({ code, label }, index) => (
           // recorre weekdays con un map y por c u dibuja un componente
           <DayScheduleRow //inyecta los register y control y avisa si el dia tiene un error

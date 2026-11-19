@@ -1,0 +1,4953 @@
+# Tareas de Matías — Frontend
+
+Esto es tu parte de `17-PLAN-FRONT.md`. Antes de arrancar leé el plan entero, sobre todo la
+sección 1 (cómo leer cada archivo: qué hacer, dónde va y su código), la 4 (reglas de juego),
+la 5 (cómo trabajar cada tarea), la 8 (lo que hay que entender antes de escribir una línea) y la 9 (cómo está organizado el código). Acá no se repiten: cuando una
+explicación diga "ver 17-PLAN-FRONT, sección 8.4", es eso. Si algo de este documento no coincide
+con `15-ESPECIFICACION-FRONT.md`, manda la especificación y se avisa al grupo.
+
+## Tus tareas
+
+| # | Rama | Qué resuelve |
+|---|---|---|
+| 0 | — | El fork del boilerplate y la rama `development` (17-PLAN-FRONT, sección 3) |
+| 1 | `chore/front-base` | Configuración, cliente HTTP y todo lo compartido de `shared/` |
+| 3 | `feat/specialties` | P6 y P7: listado, alta y baja de especialidades |
+| 4 | `feat/doctors` | P3 y P4: listado, alta y baja de médicos |
+| 10 | `docs/readme` | El README del front |
+
+## Cuándo arranca cada una
+
+| Tarea | Cuándo |
+|---|---|
+| Paso 0 | Ya. Es lo primero de todo: sin el fork nadie puede clonar |
+| 1 | Apenas termines el paso 0 |
+| 3 y 4 | Cuando esté mergeada la 2 (la sesión, de Nicolás). Las dos salen del mismo punto y no dependen entre sí: podés hacer las dos ramas a la vez y mergearlas en orden, primero la 3 |
+| 10 | Cuando estén mergeadas todas las demás (1 a 9) |
+
+El orden de merge de todo el equipo es `1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10`
+(17-PLAN-FRONT, sección 2).
+
+**Mientras esperás la tarea 2** podés ir leyendo las tareas 3 y 4 de este documento y las
+secciones P3, P4, P6 y P7 de la especificación.
+
+## Comandos para crear cada rama
+
+Siempre desde `development` actualizado (17-PLAN-FRONT, secciones 5 y 7):
+
+| Tarea | Qué tiene que estar mergeado antes | Comandos para crear la rama |
+|---|---|---|
+| 1 | El paso 0 hecho | `git switch development` · `git pull` · `git switch -c chore/front-base` |
+| 3 | Tareas 1 y 2 | `git switch development` · `git pull` · `git switch -c feat/specialties` |
+| 4 | Tareas 1 y 2 | `git switch development` · `git pull` · `git switch -c feat/doctors` |
+| 10 | Tareas 1 a 9 | `git switch development` · `git pull` · `git switch -c docs/readme` |
+
+En la tarea 1, `development` todavía es idéntico a `main`, que es el boilerplate sin tocar
+(`8109ea9`): por eso la tabla del plan dice que la 1 "sale de `main` del fork". Es el mismo
+commit.
+
+**Los números de línea** de los bloques `diff` están medidos sobre esa base exacta: el
+boilerplate para la tarea 1; `development` con la 1 y la 2 mergeadas para la 3 y la 4;
+`development` con la 1 a la 9 para la 10. Si tu rama sale de un `development` con más cosas,
+los números se corren, pero el contexto de cada bloque te dice dónde va.
+
+---
+
+## Tarea 1 — La base: configuración, cliente HTTP y el kit compartido
+
+| | |
+|---|---|
+| **Responsable** | Matías |
+| **Rama** | `chore/front-base` |
+| **Sale de** | `development` recién creado en el paso 0 (= `main` = boilerplate `8109ea9`) |
+| **Referencia** | Especificación: 0.3 (B8 a B11), 3.1, 3.4, 3.5, 4.2, 4.3, 6.1 a 6.4, 7.1 a 7.6, 10, 11.2, 12, 16 (etapa 0) |
+| **Archivos** | 59 |
+
+Escribilos **en este orden** (es el orden en que aparecen abajo, cada uno con su número):
+
+| # | Ruta completa | Qué hacer | Líneas |
+|---|---|---|---|
+| 1 | `.gitattributes` | Crear | +4 −0 |
+| 2 | `.env.development` | Reemplazar todo | +1 −1 |
+| 3 | `vite.config.js` | Reemplazar todo | +10 −19 |
+| 4 | `index.html` | Modificar | +2 −2 |
+| 5 | `src/modules/shared/api/apiError.js` | Crear | +45 −0 |
+| 6 | `src/modules/shared/api/axiosInstance.js` | Modificar | +2 −2 |
+| 7 | `src/modules/shared/services/catalogService.js` | Crear | +42 −0 |
+| 8 | `src/modules/shared/utils/dates.js` | Crear | +109 −0 |
+| 9 | `src/modules/shared/utils/formErrors.js` | Crear | +30 −0 |
+| 10 | `src/modules/shared/constants/doctorStatus.js` | Crear | +11 −0 |
+| 11 | `src/modules/shared/hooks/useDebounce.js` | Crear | +16 −0 |
+| 12 | `src/modules/shared/hooks/usePagination.js` | Crear | +18 −0 |
+| 13 | `src/modules/shared/hooks/useAsync.js` | Crear | +32 −0 |
+| 14 | `src/modules/shared/hooks/useFlashNotice.js` | Crear | +25 −0 |
+| 15 | `src/modules/shared/hooks/useDoctors.js` | Crear | +53 −0 |
+| 16 | `src/modules/shared/hooks/useDoctorOptions.js` | Crear | +40 −0 |
+| 17 | `src/modules/shared/hooks/useDoctorsBySpecialty.js` | Crear | +51 −0 |
+| 18 | `src/modules/shared/hooks/useSpecialtyOptions.js` | Crear | +47 −0 |
+| 19 | `src/modules/shared/components/atoms/Spinner.jsx` | Crear | +17 −0 |
+| 20 | `src/modules/shared/components/atoms/Icon.jsx` | Crear | +92 −0 |
+| 21 | `src/modules/shared/components/atoms/Label.jsx` | Crear | +18 −0 |
+| 22 | `src/modules/shared/components/atoms/Input.jsx` | Crear | +38 −0 |
+| 23 | `src/modules/shared/components/atoms/Select.jsx` | Crear | +16 −0 |
+| 24 | `src/modules/shared/components/atoms/Textarea.jsx` | Crear | +14 −0 |
+| 25 | `src/modules/shared/components/atoms/Card.jsx` | Crear | +14 −0 |
+| 26 | `src/modules/shared/components/atoms/Badge.jsx` | Crear | +31 −0 |
+| 27 | `src/modules/shared/components/atoms/Avatar.jsx` | Crear | +29 −0 |
+| 28 | `src/modules/shared/components/atoms/Switch.jsx` | Crear | +29 −0 |
+| 29 | `src/modules/shared/components/atoms/Button.jsx` | Mover | +42 −0 |
+| 30 | `src/modules/shared/components/molecules/Alert.jsx` | Crear | +21 −0 |
+| 31 | `src/modules/shared/components/molecules/EmptyState.jsx` | Crear | +15 −0 |
+| 32 | `src/modules/shared/components/molecules/FormField.jsx` | Crear | +35 −0 |
+| 33 | `src/modules/shared/components/molecules/SearchInput.jsx` | Crear | +42 −0 |
+| 34 | `src/modules/shared/components/molecules/StatCard.jsx` | Crear | +34 −0 |
+| 35 | `src/modules/shared/components/molecules/TablePagination.jsx` | Crear | +46 −0 |
+| 36 | `src/modules/shared/components/molecules/ConfirmDialog.jsx` | Crear | +84 −0 |
+| 37 | `src/modules/shared/components/organisms/DataTable.jsx` | Crear | +138 −0 |
+| 38 | `src/router.jsx` | Crear | +95 −0 |
+| 39 | `src/App.jsx` | Reemplazar todo | +2 −104 |
+| 40 | `src/modules/auth/hooks/useAuth.js` | Mover | +14 −0 |
+| 41 | `src/modules/auth/components/ProtectedRoute.jsx` | Modificar | +1 −1 |
+| 42 | `src/modules/auth/pages/AdminLoginPage.jsx` | Modificar | +1 −1 |
+| 43 | `src/modules/dashboard/components/DashboardLayout.jsx` | Modificar | +1 −1 |
+| 44 | `src/modules/patients/components/PatientLayout.jsx` | Modificar | +1 −1 |
+| 45 | `src/modules/patients/pages/PatientLoginPage.jsx` | Modificar | +2 −2 |
+| 46 | `src/modules/auth/context/AuthProvider.jsx` | Modificar | +0 −14 |
+| 47 | `src/modules/auth/pages/LoginPage.jsx` | Borrar | +0 −20 |
+| 48 | `src/modules/auth/components/LoginForm.jsx` | Borrar | +0 −98 |
+| 49 | `src/modules/auth/services/login.js` | Borrar | +0 −10 |
+| 50 | `src/modules/appointments/pages/AppointmentsSearchPage.jsx` | Modificar | +2 −2 |
+| 51 | `src/modules/dashboard/pages/OverviewPage.jsx` | Modificar | +2 −2 |
+| 52 | `src/modules/doctors/pages/DoctorsPage.jsx` | Modificar | +2 −2 |
+| 53 | `src/modules/patients/pages/AppointmentsPage.jsx` | Modificar | +3 −3 |
+| 54 | `src/modules/patients/pages/PatientHome.jsx` | Modificar | +2 −2 |
+| 55 | `src/modules/specialties/pages/SpecialtiesPage.jsx` | Modificar | +2 −2 |
+| 56 | `src/modules/shared/components/Card.jsx` | Borrar | +0 −11 |
+| 57 | `src/modules/shared/components/Input.jsx` | Borrar | +0 −20 |
+| 58 | `src/modules/shared/components/TablePagination.jsx` | Borrar | +0 −38 |
+| 59 | `src/assets/react.svg` | Borrar | +0 −1 |
+
+### Qué problema resuelve
+
+El boilerplate de la cátedra trae las pantallas dibujadas con datos de ejemplo, pero la base
+sobre la que se apoyan no sirve tal como está (especificación, sección 0.3):
+
+- **No se conecta con el backend (B8).** `.env.development` apunta al puerto `5142` y el backend
+  corre en el `5278`. Además `vite.config.js` arma un proxy para `/api` que nunca se usa, porque
+  Axios llama a la URL completa.
+- **El router se crea en cada render (B9).** `createBrowserRouter(routes)` está adentro de la
+  función `App`: cada vez que React redibuja `App`, arma un router nuevo.
+- **Rutas duplicadas (B10).** `/admin/patients` y `/admin/patient-search` muestran la misma
+  página, y `/admin/appointments` solo redirige a `/admin/patients`.
+- **Archivos sin uso (B11).** `LoginPage.jsx` y `LoginForm.jsx` no están en ninguna ruta, y
+  `login.js` llama a un tercer login (`api/auth/login`) que el backend no tiene.
+- **Los errores llegan crudos.** Cuando un pedido falla, la página recibe el error de Axios y
+  tiene que bucear en `error.response.data`. Cada pantalla lo hacía distinto (y buscaba códigos
+  numéricos como `1000` que el backend no usa).
+- **Solo hay cuatro componentes compartidos** (`Button`, `Input`, `Card`, `TablePagination`),
+  sueltos en `shared/components/`. Las páginas copiaban íconos SVG enteros, tablas y buscadores
+  adentro de cada archivo (B13).
+- **Los archivos se guardan con fin de línea de Windows.** Git para Windows convierte los saltos
+  de línea a CRLF al bajar los archivos, y Prettier (que corre adentro de `npm run lint`) los
+  rechaza.
+
+### Por qué así
+
+- **Todo lo compartido entra en esta tarea, aunque todavía no lo use nadie.** Las tareas 3 a 9
+  se hacen en paralelo, cada una en su carpeta de `src/modules`. Si cada uno tuviera que crear
+  el `DataTable` o el `ConfirmDialog` que necesita, habría tres versiones distintas o tres
+  personas tocando el mismo archivo de `shared/` a la vez. Por eso la base trae **todo** el kit:
+  átomos, moléculas, el `DataTable`, los hooks genéricos y también los de catálogo
+  (`useDoctors`, `useDoctorOptions`, `useDoctorsBySpecialty`, `useSpecialtyOptions` y
+  `catalogService`). **Es esperado que al terminar la tarea 1 casi todos estos archivos no los
+  importe ninguna página**: las páginas siguen siendo las del boilerplate. Cada uno se empieza a
+  usar en la tarea que lo necesita (la tabla de "Qué afecta" dice cuál).
+- **Las páginas del boilerplate no se reescriben acá.** Solo se les corrigen los `import` para
+  que sigan funcionando después de mover los componentes (y, en `AppointmentsPage`, el nombre de
+  una variante de `Button` que cambió). Siguen mostrando sus datos de ejemplo
+  hasta que la tarea de cada pantalla las reescriba. Así esta tarea se puede revisar sola: si
+  algo se ve distinto después de la 1, es un error.
+- **Los componentes del boilerplate se mueven, no se duplican** (especificación, secciones 3.4 y
+  10): `Button` y `Card` pasan a `atoms/`, `Input` a `atoms/` (sin la etiqueta ni el error, que
+  ahora son de `FormField`) y `TablePagination` a `molecules/`. Se les agregan las props que
+  faltaban en vez de crear un segundo componente que haga lo mismo.
+- **Un solo formato de error: `ApiError`** (especificación, 6.3). El interceptor de Axios
+  convierte cualquier falla en un objeto con `status`, `errorCode`, `message` y `details`. Las
+  pantallas nunca ven un error de Axios (17-PLAN-FRONT, sección 8.7).
+- **CORS directo, sin proxy** (especificación, 4.3). El proxy de Vite solo existe en el servidor
+  de desarrollo: el build de producción igual necesitaría CORS. Se quita para no dejar
+  configuración muerta, y se fija el puerto `5173`, el único que el backend acepta.
+- **`.gitattributes` con LF** para que el formato de los archivos no dependa de la
+  configuración de Git de cada uno.
+- **El 401 global y la sesión no se tocan.** Son de la tarea 2 (Nicolás). En `axiosInstance.js`
+  solo cambian dos líneas; el resto sigue siendo del boilerplate.
+
+### Qué afecta
+
+**Qué tareas dependen de esta:** todas. Esta tabla dice quién usa cada pieza nueva, así sabés
+por qué existe cada archivo aunque hoy no lo importe nadie:
+
+| Pieza de `shared/` | La usan las tareas |
+|---|---|
+| `Icon` | 2, 3, 4, 6, 7, 8, 9 |
+| `Input` | 2, 3, 4, 9 |
+| `Alert` | 2, 3, 4, 5, 7, 8 |
+| `FormField` | 2, 3, 4, 5, 7, 9 |
+| `formErrors` | 2, 3, 4, 7, 9 |
+| `Select` | 4, 5, 7, 9 |
+| `Textarea` | 3, 7 |
+| `Switch` | 5 |
+| `Badge` | 4, 6, 9 |
+| `Avatar` | 6, 7 |
+| `ConfirmDialog`, `useAsync`, `useFlashNotice` | 3, 4, 8 |
+| `EmptyState` | 3, 4, 6, 7, 8, 9 |
+| `SearchInput` | 3, 4, 6 |
+| `TablePagination`, `DataTable`, `usePagination` | 3, 4, 6, 9 |
+| `StatCard` | 6 |
+| `doctorStatus`, `useDoctors` | 4, 6 |
+| `useDoctorOptions` | 5, 9 |
+| `useDoctorsBySpecialty` | 7, 9 |
+| `useSpecialtyOptions` | 4, 7, 9 |
+| `dates` | 6, 7, 8, 9 |
+| `catalogService` | 3, 4, 6 (y todos los hooks de catálogo de arriba) |
+
+**Qué cambia para el usuario:** casi nada a la vista. La pestaña del navegador dice "MedPortal"
+en vez de "unidad-5", y las URLs `/admin/patient-search` y `/admin/appointments` ya no existen.
+Por dentro, los pedidos ya salen al backend correcto (`5278`).
+
+**Qué no se toca:** el contenido de las páginas del boilerplate (siguen con datos de ejemplo),
+los layouts, el login (sigue siendo el falso del boilerplate, con `admin` / `admin123`) y el
+manejo del `401`. Todo eso es de la tarea 2 y de las tareas de cada pantalla.
+
+**Aviso para Nicolás y Valentín:** si clonaron el repo **antes** de que se mergee esta tarea,
+cuando hagan `git pull` los archivos que esta tarea no toca van a seguir con CRLF y
+`npm run lint` les va a fallar con errores "Delete `␍`". Lo arreglan una sola vez, con la rama
+limpia, con los mismos dos comandos del paso del `.gitattributes` (más abajo).
+
+### Código, archivo por archivo
+
+Son 59 archivos, así que están en **grupos**. El orden de los grupos es el orden en que
+conviene escribirlos: **cada archivo solo importa archivos que ya escribiste antes**. Por eso los
+hooks van antes que los componentes (el buscador `SearchInput` usa el hook `useDebounce`) y la
+limpieza del boilerplate va al final.
+
+| Orden | Grupo | Archivos |
+|---|---|---|
+| A | Configuración | `.gitattributes`, `.env.development`, `vite.config.js`, `index.html` |
+| B | Cliente HTTP | `apiError.js`, `axiosInstance.js` |
+| C | Servicios, utilidades y constantes | `catalogService.js`, `dates.js`, `formErrors.js`, `doctorStatus.js` |
+| D | Hooks | `useDebounce`, `usePagination`, `useAsync`, `useFlashNotice`, `useDoctors`, `useDoctorOptions`, `useDoctorsBySpecialty`, `useSpecialtyOptions` |
+| E | Átomos | `Spinner`, `Icon`, `Label`, `Input`, `Select`, `Textarea`, `Card`, `Badge`, `Avatar`, `Switch`, `Button` |
+| F | Moléculas | `Alert`, `EmptyState`, `FormField`, `SearchInput`, `StatCard`, `TablePagination`, `ConfirmDialog` |
+| G | Organismos | `DataTable` |
+| H | Router, limpieza y arreglo de imports | `router.jsx`, `App.jsx`, `useAuth.js` y sus usuarios, `AuthProvider.jsx`, los archivos que se borran y los imports de las páginas |
+
+Dejá `npm run dev` corriendo mientras escribís. Entre el grupo E (cuando movés `Button`) y el
+grupo H, las páginas del boilerplate van a mostrar un error de import: es esperado, se arregla en
+el H.
+
+#### Grupo A — Configuración
+
+##### Archivo 1 de 59 · `.gitattributes`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (4 líneas) |
+|---|---|
+| **Carpeta** | la raíz del proyecto (donde está `package.json`) |
+| **Archivo** | `.gitattributes` |
+| **Ruta completa** | `.gitattributes` |
+
+````
+* text=auto eol=lf
+*.svg text eol=lf
+*.png binary
+*.ico binary
+````
+
+**Qué hace y por qué:**
+
+Le dice a Git cómo tratar cada tipo de archivo. No es código de la app.
+
+- `* text=auto eol=lf`: todo archivo que Git reconozca como texto se guarda y se baja con fin de
+  línea LF (el de Linux y Mac), sin importar el sistema operativo.
+- `*.svg text eol=lf`: los SVG son texto (son XML), así que también van con LF.
+- `*.png binary` y `*.ico binary`: las imágenes nunca se convierten. Si Git les cambiara bytes
+  "de fin de línea", las rompería.
+
+**Por qué hace falta:** Git para Windows viene configurado con `core.autocrlf=true`, que al bajar
+los archivos les pone CRLF (el fin de línea de Windows). Prettier exige LF, y como el ESLint del
+boilerplate corre Prettier como una regla más, `npm run lint` falla en todos los archivos con
+errores **"Delete `␍`"** (el `␍` es el CR que sobra).
+
+**Paso obligatorio, apenas creás este archivo y antes de escribir cualquier otro.** El
+`.gitattributes` solo se aplica a los archivos que Git escribe **de ahora en adelante**. Los que
+ya bajaste con el `git clone` siguen con CRLF en tu disco, y el lint sigue fallando. Hay que
+hacer que Git los vuelva a escribir:
+
+```bash
+git add .gitattributes
+git commit -m "wip: force LF"   # commit intermedio: se junta con el resto al final (17-PLAN-FRONT, sección 5)
+git rm --cached -r . -q         # saca todos los archivos del índice de Git (NO los borra del disco)
+git reset --hard                # vuelve a escribir todos los archivos desde el commit, ahora con LF
+git status                      # tiene que decir "nothing to commit, working tree clean"
+```
+
+- `git rm --cached -r .` le hace creer a Git que los archivos no están en el índice, y
+  `git reset --hard` los vuelve a sacar del último commit. Al escribirlos de nuevo, Git aplica el
+  `.gitattributes` y quedan con LF.
+- **`git reset --hard` descarta cualquier cambio sin commitear.** Por eso se hace ahora, cuando
+  lo único que hiciste es el `.gitattributes` y ya está commiteado. Nunca lo corras con trabajo a
+  medio hacer.
+- Si más adelante un archivo suelto sigue con CRLF (por ejemplo, uno que copiaste de otro lado),
+  alcanza con borrarlo y pedírselo de nuevo a Git: `git checkout -- <archivo>`.
+
+##### Archivo 2 de 59 · `.env.development`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (1 líneas) y escribí este código (1 líneas) |
+|---|---|
+| **Carpeta** | la raíz del proyecto (donde está `package.json`) |
+| **Archivo** | `.env.development` |
+| **Ruta completa** | `.env.development` |
+
+````
+VITE_BACKEND_URL=http://localhost:5278/
+````
+
+**Qué hace y por qué:**
+
+Las variables de entorno que Vite usa en desarrollo. `VITE_BACKEND_URL` es la dirección del
+backend: `axiosInstance` la usa como `baseURL`. Se corrige el puerto: el boilerplate dice `5142` y
+el backend corre en el `5278` (B8, especificación 4.2). La barra final importa: los services
+piden rutas relativas sin barra inicial (`api/doctors`) y Axios las pega a esta URL.
+
+##### Archivo 3 de 59 · `vite.config.js`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (22 líneas) y escribí este código (13 líneas) |
+|---|---|
+| **Carpeta** | la raíz del proyecto (donde está `package.json`) |
+| **Archivo** | `vite.config.js` |
+| **Ruta completa** | `vite.config.js` |
+
+````js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+
+// The backend only allows CORS from http://localhost:5173, so the dev server
+// must not silently move to another port.
+export default defineConfig({
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
+  plugins: [react(), tailwindcss()],
+});
+````
+
+**Qué hace y por qué:**
+
+La configuración del servidor de desarrollo. Se reemplaza entero porque cambia su forma:
+
+- **Se quita el proxy** (y con él `loadEnv` y `process`, que solo servían para leer la URL del
+  proxy). El proxy redirigía `/api` al backend, pero Axios ya llama a la URL absoluta, así que
+  nunca se usaba (B8, especificación 4.3).
+- **`port: 5173` y `strictPort: true`.** El backend solo acepta pedidos que vienen de
+  `http://localhost:5173` (CORS). Si ese puerto está ocupado, Vite por defecto se muda solo al
+  `5174` y todos los pedidos fallarían sin una pista clara. Con `strictPort` Vite no arranca y
+  avisa que el puerto está ocupado.
+- `plugins`: React (JSX y recarga en caliente) y Tailwind, igual que antes.
+
+##### Archivo 4 de 59 · `index.html`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | la raíz del proyecto (donde está `package.json`) |
+| **Archivo** | `index.html` |
+| **Ruta completa** | `index.html` |
+
+**Líneas 1 a 10** (en el archivo ya modificado):
+
+````diff
+@@ -1,10 +1,10 @@
+ <!doctype html>
+-<html lang="en">
++<html lang="es">
+   <head>
+     <meta charset="UTF-8" />
+     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <title>unidad-5</title>
++    <title>MedPortal</title>
+   </head>
+   <body>
+     <div id="root"></div>
+````
+
+**Qué hace y por qué:**
+
+La única página HTML de la SPA (17-PLAN-FRONT, sección 8.1): React dibuja todo adentro de
+`<div id="root">`. Dos cambios: `lang="es"`, para que los lectores de pantalla pronuncien en
+español y el navegador no ofrezca traducir; y el título `MedPortal`, el único nombre del portal
+en toda la app (especificación, sección 8).
+
+#### Grupo B — Cliente HTTP
+
+##### Archivo 5 de 59 · `apiError.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (45 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/api/` |
+| **Archivo** | `apiError.js` |
+| **Ruta completa** | `src/modules/shared/api/apiError.js` |
+
+````js
+// Uniform error shape for every failed HTTP call. Hooks and components only
+// ever see an ApiError, never an Axios error.
+const NETWORK_ERROR = 'NETWORK_ERROR';
+const UNEXPECTED_MESSAGE = 'Ocurrió un error inesperado. Intentá nuevamente';
+
+// The backend message is already user-facing Spanish, so it is shown as is.
+// Only these statuses get a front-end text of their own.
+const ownMessages = {
+  429: 'Demasiadas solicitudes. Intentá de nuevo en un minuto',
+  500: UNEXPECTED_MESSAGE,
+};
+
+class ApiError extends Error {
+  constructor({ status, errorCode, message, details = [] }) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.errorCode = errorCode;
+    this.details = details;
+  }
+
+  static fromAxiosError(error) {
+    const { response } = error;
+
+    if (!response) {
+      return new ApiError({
+        status: 0,
+        errorCode: NETWORK_ERROR,
+        message: 'No se pudo conectar con el servidor',
+      });
+    }
+
+    const { status } = response;
+    const body = response.data ?? {};
+
+    return new ApiError({
+      status,
+      errorCode: body.errorCode ?? 'UNKNOWN_ERROR',
+      message: ownMessages[status] ?? body.message ?? UNEXPECTED_MESSAGE,
+      details: Array.isArray(body.details) ? body.details : [],
+    });
+  }
+}
+
+export { ApiError, NETWORK_ERROR };
+````
+
+**Qué hace y por qué:**
+
+La forma única de los errores (17-PLAN-FRONT, sección 8.7; especificación 6.3 y 6.4). Es una
+**clase** que extiende `Error`, así sigue siendo un error de JavaScript de verdad (se puede
+lanzar con `throw` y atrapar con `catch`), pero con cuatro campos propios:
+
+- El `constructor` recibe `{ status, errorCode, message, details }`. `super(message)` le pasa el
+  mensaje a `Error`, y `details = []` hace que, si no viene, sea una lista vacía.
+- `static fromAxiosError(error)` es el traductor. `static` quiere decir que se llama sobre la
+  clase (`ApiError.fromAxiosError(...)`), sin crear un objeto antes.
+  - **Sin `response`** (backend apagado, sin red, CORS bloqueado): `status: 0`,
+    `errorCode: 'NETWORK_ERROR'` y el mensaje "No se pudo conectar con el servidor".
+  - **Con `response`**: toma el `errorCode` y el `message` del cuerpo que manda el backend.
+- `ownMessages` son los únicos textos propios del front: para `429` y `500` (especificación
+  6.4). Todo lo demás muestra el `message` del backend, que ya viene en español.
+- `??` es el operador "si lo de la izquierda es `null` o `undefined`, usá lo de la derecha". Así
+  `ownMessages[status] ?? body.message ?? UNEXPECTED_MESSAGE` quiere decir: el texto propio si lo
+  hay; si no, el del backend; si tampoco, el genérico.
+- `Array.isArray(body.details)` se asegura de que `details` siempre sea una lista, para que nadie
+  tenga que preguntar antes de recorrerla.
+
+Lo importa `axiosInstance.js`. Exporta también `NETWORK_ERROR` por si una pantalla necesita
+distinguir "no hay conexión".
+
+##### Archivo 6 de 59 · `axiosInstance.js`
+
+| **Qué hacer** | **Modificar** 2 lugares del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/shared/api/` |
+| **Archivo** | `axiosInstance.js` |
+| **Ruta completa** | `src/modules/shared/api/axiosInstance.js` |
+
+**Líneas 1 a 8** (en el archivo ya modificado):
+
+````diff
+@@ -1,8 +1,8 @@
+ import axios from 'axios';
++import { ApiError } from './apiError';
+ 
+ const instance = axios.create({
+   baseURL: import.meta.env.VITE_BACKEND_URL,
+-  withCredentials: true,
+ });
+ 
+ instance.interceptors.request.use(
+````
+
+**Líneas 32 a 38** (en el archivo ya modificado):
+
+````diff
+@@ -32,7 +32,7 @@ instance.interceptors.response.use(
+       }
+     }
+ 
+-    return Promise.reject(error);
++    return Promise.reject(ApiError.fromAxiosError(error));
+   }
+ );
+ 
+````
+
+**Qué hace y por qué:**
+
+La única instancia de Axios del proyecto (17-PLAN-FRONT, sección 8.6): la usan todos los
+services. Cambian solo dos cosas (especificación 6.1):
+
+- **Se quita `withCredentials: true`.** Eso le pide al navegador que mande cookies, pero el token
+  viaja en el header `Authorization`, no en una cookie.
+- **El interceptor de respuesta rechaza con un `ApiError`** en vez del error de Axios. Un
+  *interceptor* es una función que Axios corre con cada respuesta antes de devolvérsela a quien
+  hizo el pedido: es el único lugar donde se convierte el error.
+
+El resto (el token que se agrega en cada pedido y lo que hace con un `401`) sigue siendo el del
+boilerplate. Lo reescribe la tarea 2.
+
+#### Grupo C — Servicios, utilidades y constantes
+
+##### Archivo 7 de 59 · `catalogService.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (42 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/services/` |
+| **Archivo** | `catalogService.js` |
+| **Ruta completa** | `src/modules/shared/services/catalogService.js` |
+
+````js
+import { instance } from '../api/axiosInstance';
+
+// Paged lists that several features read (spec 3.2: what two or more
+// features need lives in shared/). Both answer { pageSize, pageIndex, total, data }.
+
+// GET /api/doctors?pageSize&pageIndex&name&specialtyId
+// `name` and `specialtyId` are sent only when present (spec 7.4, P10).
+async function getDoctors({
+  pageIndex = 1,
+  pageSize = 10,
+  name,
+  specialtyId,
+} = {}) {
+  const params = { pageIndex, pageSize };
+
+  if (name) {
+    params.name = name;
+  }
+
+  if (specialtyId) {
+    params.specialtyId = specialtyId;
+  }
+
+  const response = await instance.get('api/doctors', { params });
+
+  return response.data;
+}
+
+// GET /api/specialties?pageSize&pageIndex&name. `name` only when present.
+async function getSpecialties({ pageIndex = 1, pageSize = 10, name } = {}) {
+  const params = { pageIndex, pageSize };
+
+  if (name) {
+    params.name = name;
+  }
+
+  const response = await instance.get('api/specialties', { params });
+
+  return response.data;
+}
+
+export { getDoctors, getSpecialties };
+````
+
+**Qué hace y por qué:**
+
+Un **service** (17-PLAN-FRONT, sección 8.6): funciones que arman un pedido HTTP y devuelven los
+datos, sin nada de React. Está en `shared/` y no en `doctors/` porque la lista de médicos y la de
+especialidades la leen varias funcionalidades (especificación 3.2; regla 1 de 17-PLAN-FRONT,
+sección 9).
+
+- `getDoctors({ pageIndex = 1, pageSize = 10, name, specialtyId } = {})`: los valores después del
+  `=` son los que se usan si no se mandan, y el `= {}` del final permite llamarla sin argumentos.
+- `params` es un objeto con los parámetros de la URL. Axios lo convierte en
+  `?pageIndex=1&pageSize=10&...`. `name` y `specialtyId` se agregan **solo si tienen valor**: el
+  backend rechaza `name=` vacío (especificación 7.4).
+- Devuelve `response.data`, que es la página entera: `{ pageSize, pageIndex, total, data }`
+  (especificación 7.3).
+- `getSpecialties` es lo mismo para `api/specialties`.
+
+Importa `instance` de `axiosInstance`. Lo importan los cuatro hooks de catálogo de este grupo D
+y, más adelante, los services de las tareas 3 y 4.
+
+##### Archivo 8 de 59 · `dates.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (109 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/utils/` |
+| **Archivo** | `dates.js` |
+| **Ruta completa** | `src/modules/shared/utils/dates.js` |
+
+````js
+// Dates travel as "YYYY-MM-DD" strings. They are built from local calendar
+// parts (never toISOString, which shifts to UTC and can change the day).
+// Spec 7.2: this is the only place where dates are converted.
+
+const WEEK_LENGTH = 7;
+
+function toIsoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+// "2026-08-10" -> local Date at midnight.
+function fromIsoDate(iso) {
+  const [year, month, day] = iso.split('-').map(Number);
+
+  return new Date(year, month - 1, day);
+}
+
+function addDays(iso, amount) {
+  const date = fromIsoDate(iso);
+
+  date.setDate(date.getDate() + amount);
+
+  return toIsoDate(date);
+}
+
+function todayIso() {
+  return toIsoDate(new Date());
+}
+
+const weekdayFormatter = new Intl.DateTimeFormat('es-AR', { weekday: 'short' });
+const longFormatter = new Intl.DateTimeFormat('es-AR', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+});
+const shortMonthFormatter = new Intl.DateTimeFormat('es-AR', {
+  month: 'short',
+});
+
+function capitalize(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// The 7 days of the visible window, starting at `from`.
+function buildWeek(from) {
+  return Array.from({ length: WEEK_LENGTH }, (_, offset) => {
+    const iso = addDays(from, offset);
+    const date = fromIsoDate(iso);
+
+    return {
+      iso,
+      weekday: capitalize(weekdayFormatter.format(date).replace('.', '')),
+      dayNumber: date.getDate(),
+      longLabel: formatLongDate(iso),
+    };
+  });
+}
+
+// "2026-08-10" -> "Lunes 10 de agosto" (spec 7.1: no comma after the weekday)
+function formatLongDate(iso) {
+  return capitalize(longFormatter.format(fromIsoDate(iso)).replace(',', ''));
+}
+
+// "2026-10-24" -> "24 oct 2026"
+function formatShortDate(iso) {
+  const date = fromIsoDate(iso);
+  const month = shortMonthFormatter.format(date).replace('.', '');
+
+  return `${date.getDate()} ${month} ${date.getFullYear()}`;
+}
+
+// "2026-08-10 09:00" (search response) -> { date: "2026-08-10", time: "09:00" }
+function splitDateTime(value) {
+  const [date = '', time = ''] = (value ?? '').split(' ');
+
+  return { date, time };
+}
+
+// True when the local date and time "YYYY-MM-DD HH:mm" is already behind `now`.
+function isPastDateTime(value, now = new Date()) {
+  const { date, time } = splitDateTime(value);
+
+  if (!date || !time) {
+    return false;
+  }
+
+  const moment = fromIsoDate(date);
+  const [hours, minutes] = time.split(':').map(Number);
+
+  moment.setHours(hours, minutes, 0, 0);
+
+  return moment.getTime() <= now.getTime();
+}
+
+export {
+  WEEK_LENGTH,
+  toIsoDate,
+  addDays,
+  todayIso,
+  buildWeek,
+  formatLongDate,
+  formatShortDate,
+  splitDateTime,
+  isPastDateTime,
+};
+````
+
+**Qué hace y por qué:**
+
+Todas las conversiones de fechas en un solo lugar (especificación 7.1 y 7.2). Hoy no la usa
+nadie: la usan las tareas 6, 7, 8 y 9.
+
+**El problema que resuelve:** `new Date("2026-08-10")` se interpreta como medianoche en UTC, y en
+Argentina (UTC-3) eso es el **9** de agosto a las 21. Y `toISOString()` devuelve la fecha en UTC,
+así que de noche puede dar el día siguiente. Por eso:
+
+- `toIsoDate(date)` arma `"YYYY-MM-DD"` con `getFullYear()`, `getMonth() + 1` (los meses van de
+  0 a 11) y `getDate()`. `padStart(2, '0')` completa con un cero a la izquierda: `8` → `"08"`.
+- `fromIsoDate(iso)` separa el string con `split('-')`, convierte cada parte a número con
+  `map(Number)` y arma la fecha **local** con `new Date(año, mes - 1, día)`.
+- `addDays` y `todayIso` se apoyan en esas dos.
+- Los `Intl.DateTimeFormat('es-AR', ...)` son los formateadores del navegador en español. Se
+  crean **una vez**, afuera de las funciones, porque crearlos es caro y siempre son iguales.
+- `buildWeek(from)` arma los 7 días de una semana. `Array.from({ length: 7 }, (_, offset) => ...)`
+  crea una lista de 7 elementos llamando a la función con la posición (`offset` de 0 a 6); el
+  `_` es el primer parámetro, que no se usa.
+- `formatLongDate` da "Lunes 10 de agosto": le saca la coma que pone el navegador
+  (especificación 7.1) y pone la primera letra en mayúscula con `capitalize`.
+- `formatShortDate` da "24 oct 2026" (le saca el punto a "oct.").
+- `splitDateTime("2026-08-10 09:00")` separa fecha y hora. `const [date = '', time = ''] = ...`
+  pone `''` si falta alguna parte, y `(value ?? '')` evita que falle si `value` es `null`.
+- `isPastDateTime` dice si un turno ya empezó: arma la fecha local con la hora y la compara con
+  `now` usando `getTime()` (milisegundos).
+
+##### Archivo 9 de 59 · `formErrors.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (30 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/utils/` |
+| **Archivo** | `formErrors.js` |
+| **Ruta completa** | `src/modules/shared/utils/formErrors.js` |
+
+````js
+// Moves backend 400 details onto the matching form fields (React Hook Form).
+// The backend `issue` is a machine code (e.g. "invalid_format"), so the text
+// shown comes from `fieldMessages`: { fieldName: 'Spanish message' }.
+// Returns true when at least one detail matched a field.
+function applyFieldErrors(apiError, setError, fieldMessages) {
+  if (apiError?.status !== 400) {
+    return false;
+  }
+
+  let applied = false;
+
+  apiError.details.forEach(({ field, issue }) => {
+    const name = Object.keys(fieldMessages).find(
+      (candidate) => candidate.toLowerCase() === String(field).toLowerCase()
+    );
+
+    if (name) {
+      setError(name, { type: issue ?? 'server', message: fieldMessages[name] });
+      applied = true;
+    }
+  });
+
+  return applied;
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const trimValue = (value) => (typeof value === 'string' ? value.trim() : value);
+
+export { applyFieldErrors, EMAIL_PATTERN, trimValue };
+````
+
+**Qué hace y por qué:**
+
+Tres ayudas para formularios (especificación 11.2):
+
+- `applyFieldErrors(apiError, setError, fieldMessages)`: cuando el backend responde `400` con
+  `details: [{ field, issue }]`, pone cada error **debajo de su campo** con el `setError` de
+  React Hook Form (17-PLAN-FRONT, sección 8.8). Compara los nombres sin importar mayúsculas
+  (`toLowerCase()`), porque el backend puede mandar `Name` y el campo se llama `name`. El texto
+  que se muestra sale de `fieldMessages` (el que le pasa cada página) y no del `issue`, porque el
+  `issue` es un código de máquina como `invalid_format`. Devuelve `true` si ubicó al menos un
+  error, así la página sabe si además tiene que mostrar un aviso general.
+- `EMAIL_PATTERN`: la expresión regular para validar un correo. `^` y `$` marcan el principio y
+  el fin; `[^\s@]+` es "uno o más caracteres que no sean espacio ni `@`"; `\.` es un punto
+  literal. Se lee: algo, `@`, algo, punto, algo. La usa la tarea 2.
+- `trimValue`: le saca los espacios de los costados a un texto (y deja igual lo que no es
+  texto). Los formularios la pasan como `setValueAs`, así "   " no pasa la validación del front
+  para después rebotar en el backend.
+
+##### Archivo 10 de 59 · `doctorStatus.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (11 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/constants/` |
+| **Archivo** | `doctorStatus.js` |
+| **Ruta completa** | `src/modules/shared/constants/doctorStatus.js` |
+
+````js
+// Doctor state (spec 7.6, D39): hasAvailability -> label and badge tone.
+// "Sin agenda" uses the warning colour (spec 13).
+function availabilityInfo(hasAvailability) {
+  if (hasAvailability) {
+    return { label: 'Con agenda', tone: 'success' };
+  }
+
+  return { label: 'Sin agenda', tone: 'warning' };
+}
+
+export { availabilityInfo };
+````
+
+**Qué hace y por qué:**
+
+Convierte el `hasAvailability` del médico en la etiqueta y el color del badge: "Con agenda" o
+"Sin agenda" (especificación 7.6). "Con agenda" va en verde (`success`) y "Sin agenda" en ámbar
+(`warning`, los colores `med-leave-*` que la especificación 13 asigna a "Sin agenda"). Está en `shared/constants` porque la usan el listado de
+médicos (tarea 4) y el tablero (tarea 6): así el texto se escribe una sola vez.
+
+#### Grupo D — Hooks
+
+Un hook propio es una función que empieza con `use` y adentro usa otros hooks
+(17-PLAN-FRONT, sección 8.5). Ninguno dibuja nada.
+
+##### Archivo 11 de 59 · `useDebounce.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (16 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `useDebounce.js` |
+| **Ruta completa** | `src/modules/shared/hooks/useDebounce.js` |
+
+````js
+import { useEffect, useState } from 'react';
+
+// Returns `value` once it has stopped changing for `delay` ms.
+function useDebounce(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}
+
+export default useDebounce;
+````
+
+**Qué hace y por qué:**
+
+Devuelve el valor que le pasás, pero **recién cuando dejó de cambiar** durante `delay`
+milisegundos. Lo usa el buscador para no mandar un pedido por cada letra (especificación 6.6 y
+7.4).
+
+- Cada vez que cambia `value`, el efecto arranca un temporizador con `setTimeout` que, al
+  terminar, guarda el valor.
+- La función de limpieza (`return () => clearTimeout(timer)`) cancela el temporizador anterior.
+  Si escribís otra letra antes de los 400 ms, el temporizador viejo se cancela y arranca uno
+  nuevo: solo el último llega a guardar el valor.
+
+##### Archivo 12 de 59 · `usePagination.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (18 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `usePagination.js` |
+| **Ruta completa** | `src/modules/shared/hooks/usePagination.js` |
+
+````js
+import { useCallback, useState } from 'react';
+
+// pageIndex (base 1, spec 7.3), pageSize and their changes (spec 10).
+// `reset` goes back to page 1, e.g. when a search or a filter changes.
+function usePagination(pageSize = 10) {
+  const [pageIndex, setPageIndex] = useState(1);
+
+  const reset = useCallback(() => setPageIndex(1), []);
+
+  const totalPages = useCallback(
+    (total) => Math.max(Math.ceil(total / pageSize), 1),
+    [pageSize]
+  );
+
+  return { pageIndex, pageSize, setPageIndex, reset, totalPages };
+}
+
+export default usePagination;
+````
+
+**Qué hace y por qué:**
+
+Guarda en qué página estás (`pageIndex`, que empieza en 1 porque el backend cuenta desde 1,
+especificación 7.3) y el tamaño de página.
+
+- `reset` vuelve a la página 1. Se usa cuando cambia la búsqueda.
+- `totalPages(total)` calcula cuántas páginas hay: `Math.ceil` redondea hacia arriba (42
+  resultados de a 10 son 5 páginas) y `Math.max(..., 1)` hace que nunca diga "página 1 de 0".
+- **`useCallback`** guarda la misma función entre un dibujo y el siguiente, en vez de crear una
+  nueva cada vez. Importa porque estas funciones van a parar a listas de dependencias de efectos
+  (17-PLAN-FRONT, sección 8.4): si fueran una función nueva en cada dibujo, el efecto se
+  repetiría siempre.
+
+##### Archivo 13 de 59 · `useAsync.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (32 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `useAsync.js` |
+| **Ruta completa** | `src/modules/shared/hooks/useAsync.js` |
+
+````js
+import { useCallback, useState } from 'react';
+
+// loading, error and run for one mutation (spec 10). `run` calls the service
+// function, keeps `loading` true meanwhile and stores the ApiError when it
+// fails. It rethrows, so the page can still branch on `errorCode`.
+function useAsync(fn) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const run = useCallback(
+    async (...args) => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        return await fn(...args);
+      } catch (apiError) {
+        setError(apiError);
+        throw apiError;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fn]
+  );
+
+  const reset = useCallback(() => setError(null), []);
+
+  return { run, loading, error, reset };
+}
+
+export default useAsync;
+````
+
+**Qué hace y por qué:**
+
+Para las **mutaciones** (crear, editar, borrar; especificación 10): guarda `loading` y `error` de
+una sola llamada.
+
+- `run(...args)` llama a la función del service con los mismos argumentos. Antes pone
+  `loading` en `true` y borra el error anterior.
+- `try` / `catch` / `finally`: si sale bien devuelve el resultado; si falla guarda el `ApiError`
+  en `error` **y lo vuelve a lanzar** (`throw apiError`), para que la página pueda decidir qué
+  hacer según el `errorCode`; y en los dos casos (`finally`) apaga `loading`.
+- `reset` borra el error, por ejemplo al abrir de nuevo un diálogo.
+
+##### Archivo 14 de 59 · `useFlashNotice.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (25 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `useFlashNotice.js` |
+| **Ruta completa** | `src/modules/shared/hooks/useFlashNotice.js` |
+
+````js
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+// Reads a one-shot notice passed through navigation state:
+//   navigate('/admin/x', { state: { notice: { tone: 'success', message } } })
+// and clears it from history so a reload does not show it again.
+function useFlashNotice() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [notice, setNotice] = useState(() => location.state?.notice ?? null);
+  const hasNoticeInHistory = Boolean(location.state?.notice);
+
+  useEffect(() => {
+    if (hasNoticeInHistory) {
+      navigate(location.pathname + location.search, {
+        replace: true,
+        state: null,
+      });
+    }
+  }, [hasNoticeInHistory, location.pathname, location.search, navigate]);
+
+  return [notice, setNotice];
+}
+
+export default useFlashNotice;
+````
+
+**Qué hace y por qué:**
+
+Un aviso que llega **de otra pantalla**: el formulario guarda y vuelve al listado con
+`navigate('/admin/x', { state: { notice: {...} } })`, y el listado muestra "Se creó...". El
+`state` de React Router viaja con la navegación sin aparecer en la URL.
+
+- `useState(() => location.state?.notice ?? null)`: le pasa una **función** a `useState`, que
+  React corre una sola vez, al principio. `?.` es "si existe": si no hay `state`, no falla.
+- El efecto reemplaza la entrada actual del historial por la misma URL **sin** `state`
+  (`replace: true`). Así, si apretás F5 o volvés con "atrás", el aviso no aparece de nuevo.
+- Devuelve `[notice, setNotice]`, igual que `useState`, para que la página también pueda mostrar
+  avisos propios (por ejemplo, "Se eliminó...").
+
+##### Archivo 15 de 59 · `useDoctors.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (53 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `useDoctors.js` |
+| **Ruta completa** | `src/modules/shared/hooks/useDoctors.js` |
+
+````js
+import { useCallback, useEffect, useState } from 'react';
+import { getDoctors } from '../services/catalogService';
+
+const EMPTY_PAGE = { data: [], total: 0 };
+
+// Paged list. Reloads when the params change; a stale response is ignored
+// (spec 3.5). `reload` asks again with the same params.
+function useDoctors({ pageIndex, pageSize, name }) {
+  const [page, setPage] = useState(EMPTY_PAGE);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+
+    setLoading(true);
+    setError(null);
+
+    getDoctors({ pageIndex, pageSize, name })
+      .then((result) => {
+        if (!ignore) {
+          setPage({ data: result.data, total: result.total });
+        }
+      })
+      .catch((apiError) => {
+        if (!ignore) {
+          setError(apiError);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [pageIndex, pageSize, name, reloadKey]);
+
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
+
+  return {
+    doctors: page.data,
+    total: page.total,
+    loading,
+    error,
+    reload,
+  };
+}
+
+export default useDoctors;
+````
+
+**Qué hace y por qué:**
+
+Una página del listado de médicos. Es exactamente el patrón de carga de 17-PLAN-FRONT, sección
+8.4 (especificación 3.5): la bandera `ignore`, la limpieza y las dependencias
+`[pageIndex, pageSize, name, reloadKey]`.
+
+- `EMPTY_PAGE` está afuera del hook para que sea siempre el mismo objeto.
+- **`reload`** suma uno a `reloadKey`. Como `reloadKey` está en las dependencias, el efecto se
+  repite y vuelve a pedir la misma página. Se usa después de borrar y en el botón "Reintentar".
+- Devuelve `{ doctors, total, loading, error, reload }`.
+
+Está en `shared/` y no en `doctors/` porque lo usan el listado de médicos (tarea 4) y el tablero
+(tarea 6), y una funcionalidad no importa de otra (17-PLAN-FRONT, sección 9).
+
+##### Archivo 16 de 59 · `useDoctorOptions.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (40 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `useDoctorOptions.js` |
+| **Ruta completa** | `src/modules/shared/hooks/useDoctorOptions.js` |
+
+````js
+import { useEffect, useState } from 'react';
+import { getDoctors } from '../services/catalogService';
+
+const OPTIONS_PAGE_SIZE = 100;
+
+// Doctors for a <select> (spec P5: GET /api/doctors?pageSize=100).
+function useDoctorOptions() {
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    getDoctors({ pageIndex: 1, pageSize: OPTIONS_PAGE_SIZE })
+      .then((result) => {
+        if (!ignore) {
+          setOptions(result.data);
+        }
+      })
+      .catch((apiError) => {
+        if (!ignore) {
+          setError(apiError);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  return { options, loading, error };
+}
+
+export default useDoctorOptions;
+````
+
+**Qué hace y por qué:**
+
+Los médicos para un combo (`<select>`): pide **una** página de 100, el máximo que acepta el
+backend (especificación 7.5). La lista de dependencias vacía (`[]`) hace que el efecto corra una
+sola vez, cuando el componente aparece. Lo usan la agenda (tarea 5) y la búsqueda de turnos
+(tarea 9).
+
+##### Archivo 17 de 59 · `useDoctorsBySpecialty.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (51 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `useDoctorsBySpecialty.js` |
+| **Ruta completa** | `src/modules/shared/hooks/useDoctorsBySpecialty.js` |
+
+````js
+import { useEffect, useState } from 'react';
+import { getDoctors } from '../services/catalogService';
+
+const OPTIONS_PAGE_SIZE = 100;
+
+// Doctors of one specialty (spec P10). Without specialtyId it does nothing.
+function useDoctorsBySpecialty(specialtyId) {
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!specialtyId) {
+      setDoctors([]);
+      setError(null);
+      setLoading(false);
+
+      return undefined;
+    }
+
+    let ignore = false;
+
+    setLoading(true);
+    setError(null);
+
+    getDoctors({ pageIndex: 1, pageSize: OPTIONS_PAGE_SIZE, specialtyId })
+      .then((result) => {
+        if (!ignore) {
+          setDoctors(result.data);
+        }
+      })
+      .catch((apiError) => {
+        if (!ignore) {
+          setError(apiError);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [specialtyId]);
+
+  return { doctors, loading, error };
+}
+
+export default useDoctorsBySpecialty;
+````
+
+**Qué hace y por qué:**
+
+Los médicos de una especialidad, para el segundo combo de la reserva (especificación P10). Si
+todavía no se eligió especialidad, vacía la lista y **no pide nada** (`return undefined`: no hay
+nada que limpiar). Cuando cambia `specialtyId`, pide con `specialtyId` en la URL. Lo usan las
+tareas 7 y 9.
+
+##### Archivo 18 de 59 · `useSpecialtyOptions.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (47 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/hooks/` |
+| **Archivo** | `useSpecialtyOptions.js` |
+| **Ruta completa** | `src/modules/shared/hooks/useSpecialtyOptions.js` |
+
+````js
+import { useCallback, useEffect, useState } from 'react';
+import { getSpecialties } from '../services/catalogService';
+
+const OPTIONS_PAGE_SIZE = 100;
+
+// Specialties for a <select> (spec P4: GET /api/specialties?pageSize=100).
+// `reload` asks again, e.g. after DOCTOR_SPECIALTY_NOT_FOUND.
+function useSpecialtyOptions() {
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+
+    setLoading(true);
+    setError(null);
+
+    getSpecialties({ pageIndex: 1, pageSize: OPTIONS_PAGE_SIZE })
+      .then((result) => {
+        if (!ignore) {
+          setOptions(result.data);
+        }
+      })
+      .catch((apiError) => {
+        if (!ignore) {
+          setError(apiError);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
+
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
+
+  return { options, loading, error, reload };
+}
+
+export default useSpecialtyOptions;
+````
+
+**Qué hace y por qué:**
+
+Las especialidades para un combo (`pageSize` 100, especificación 7.5). Tiene `reload` como
+`useDoctors`: el formulario de médicos lo llama cuando el backend responde que la especialidad
+elegida ya no existe (`DOCTOR_SPECIALTY_NOT_FOUND`, especificación P4). Lo usan las tareas 4, 7
+y 9.
+
+#### Grupo E — Átomos
+
+Los átomos son las piezas mínimas (17-PLAN-FRONT, sección 9; especificación 3.4 y 10). Todos
+reciben `className` para que quien los usa pueda agregar clases, y casi todos usan un objeto de
+estilos (`sizes`, `TONES`, `variantStyle`) en vez de una cadena de `if`.
+
+##### Archivo 19 de 59 · `Spinner.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (17 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Spinner.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Spinner.jsx` |
+
+````jsx
+const sizes = {
+  sm: 'w-4 h-4 border-2',
+  md: 'w-6 h-6 border-2',
+  lg: 'w-10 h-10 border-4',
+};
+
+function Spinner({ size = 'sm', className = '' }) {
+  return (
+    <span
+      role="status"
+      aria-label="Cargando"
+      className={`inline-block rounded-full border-current border-t-transparent animate-spin ${sizes[size] ?? sizes.sm} ${className}`}
+    />
+  );
+}
+
+export default Spinner;
+````
+
+**Qué hace y por qué:**
+
+El círculo que gira mientras algo carga. Es un `<span>` redondo (`rounded-full`) con borde del
+color del texto (`border-current`) salvo arriba (`border-t-transparent`), y `animate-spin` lo
+hace girar: se ve un aro con un hueco que da vueltas. `role="status"` y `aria-label="Cargando"`
+hacen que un lector de pantalla anuncie "Cargando". `sizes[size] ?? sizes.sm` usa el tamaño
+chico si llega uno que no existe.
+
+##### Archivo 20 de 59 · `Icon.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (92 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Icon.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Icon.jsx` |
+
+````jsx
+// Single place for the icon set. Paths are Heroicons (outline, 24px).
+const paths = {
+  shield: [
+    'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+  ],
+  mail: [
+    'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  ],
+  lock: [
+    'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
+  ],
+  eye: [
+    'M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+    'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z',
+  ],
+  eyeOff: [
+    'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18',
+  ],
+  idCard: [
+    'M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2',
+  ],
+  user: ['M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+  info: ['M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+  error: ['M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+  success: ['M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+  search: ['M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'],
+  plus: ['M12 4v16m8-8H4'],
+  chevronLeft: ['M15 19l-7-7 7-7'],
+  chevronRight: ['M9 5l7 7-7 7'],
+  calendar: [
+    'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+  ],
+  pencil: [
+    'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z',
+  ],
+  trash: [
+    'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+  ],
+  briefcase: [
+    'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
+  ],
+  grid: [
+    'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+  ],
+  filter: [
+    'M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z',
+  ],
+  check: ['M5 13l4 4L19 7'],
+  userX: [
+    'M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6',
+  ],
+  x: ['M6 18L18 6M6 6l12 12'],
+  menu: ['M4 6h16M4 12h16M4 18h16'],
+  logout: [
+    'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1',
+  ],
+  medical: [
+    'M9 12h6m-3-3v6m-7 5h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+  ],
+  userSearch: [
+    'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+    'M21 21l-3.5-3.5',
+  ],
+  inbox: [
+    'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4',
+  ],
+};
+
+function Icon({ name, className = 'w-4 h-4' }) {
+  const iconPaths = paths[name];
+
+  if (!iconPaths) {
+    return null;
+  }
+
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
+      {iconPaths.map((d) => (
+        <path key={d} strokeLinecap="round" strokeLinejoin="round" d={d} />
+      ))}
+    </svg>
+  );
+}
+
+export default Icon;
+````
+
+**Qué hace y por qué:**
+
+Todos los íconos del proyecto en un solo lugar (especificación 10: "un único punto para cambiar
+de set de íconos"). Reemplaza los SVG que el boilerplate copiaba enteros adentro de cada página
+(B13).
+
+- `paths` es un diccionario: nombre del ícono → lista de trazos SVG (los `d` de cada `<path>`).
+  Son los íconos Heroicons, los mismos que usaba el boilerplate.
+- Si el nombre no existe, devuelve `null` (no dibuja nada) en vez de romper la página.
+- `stroke="currentColor"` hace que el ícono tome el color del texto que lo rodea.
+- `aria-hidden="true"`: el ícono es decoración; el texto o el `aria-label` del botón ya dicen
+  qué hace.
+- `key={d}`: cada `<path>` de la lista necesita una `key` (17-PLAN-FRONT, sección 8.2). El trazo
+  mismo es único y no cambia, así que sirve de `key` sin usar la posición.
+
+##### Archivo 21 de 59 · `Label.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (18 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Label.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Label.jsx` |
+
+````jsx
+function Label({ htmlFor, required = false, children }) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="text-xs font-semibold text-med-text-main"
+    >
+      {children}
+      {required && (
+        <span className="text-red-500" aria-hidden="true">
+          {' '}
+          *
+        </span>
+      )}
+    </label>
+  );
+}
+
+export default Label;
+````
+
+**Qué hace y por qué:**
+
+La etiqueta de un campo. `htmlFor` (el `for` de HTML) la conecta con el campo que tiene ese
+`id`: al tocar la etiqueta se activa el campo y el lector de pantalla lee la etiqueta al entrar
+al campo. Con `required` agrega un asterisco rojo; el asterisco lleva `aria-hidden` porque es
+solo visual. `{' '}` es un espacio entre el texto y el asterisco.
+
+##### Archivo 22 de 59 · `Input.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (38 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Input.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Input.jsx` |
+
+````jsx
+import Icon from './Icon';
+
+// Plain <input> styled for the app. Works with React Hook Form's register
+// (React 19 passes ref as a regular prop). `icon` adds a leading icon and
+// `endAdornment` a trailing element, such as a show/hide password button.
+function Input({
+  invalid = false,
+  icon,
+  endAdornment,
+  className = '',
+  ...restProps
+}) {
+  return (
+    <div className="relative">
+      {icon && (
+        <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-med-text-muted">
+          <Icon name={icon} />
+        </span>
+      )}
+      <input
+        aria-invalid={invalid || undefined}
+        className={`w-full min-h-11 border rounded-lg py-2.5 text-sm bg-white text-med-text-main placeholder-med-text-muted transition focus:outline-none focus:ring-2 focus:ring-med-primary-600 focus:border-transparent ${
+          icon ? 'pl-10' : 'pl-3.5'
+        } ${endAdornment ? 'pr-12' : 'pr-3.5'} ${
+          invalid ? 'border-red-400 bg-red-50/20' : 'border-med-border'
+        } ${className}`}
+        {...restProps}
+      />
+      {endAdornment && (
+        <span className="absolute inset-y-0 right-0 flex items-center pr-0.5">
+          {endAdornment}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export default Input;
+````
+
+**Qué hace y por qué:**
+
+El campo de texto. Reemplaza al `Input` del boilerplate (ese se borra en el grupo H), con dos
+diferencias: la etiqueta y el mensaje de error ya no van acá sino en `FormField`, y se agregan
+`invalid`, `icon` y `endAdornment`.
+
+- `...restProps` junta todas las demás props (`type`, `placeholder`, `value`, `onChange`...) y
+  se las pasa al `<input>`. Así funciona con `register` de React Hook Form, que devuelve
+  `name`, `onChange`, `onBlur` y `ref`. En React 19 `ref` es una prop más, así que también pasa
+  por `restProps`.
+- `aria-invalid={invalid || undefined}`: si `invalid` es `false` da `undefined`, y React no
+  escribe el atributo. Si es `true`, el lector de pantalla anuncia que el campo tiene un error.
+- `icon` agrega un ícono a la izquierda, ubicado con `absolute` dentro del `relative`.
+  `pointer-events-none` deja que el clic "atraviese" el ícono y llegue al campo. Por eso el
+  campo cambia el padding izquierdo: `pl-10` con ícono, `pl-3.5` sin él.
+- `endAdornment` es algo a la derecha (el botón de ver la contraseña de la tarea 2).
+- `min-h-11` es el alto mínimo de 44 px que se puede tocar con el dedo (especificación 12.3).
+
+##### Archivo 23 de 59 · `Select.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (16 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Select.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Select.jsx` |
+
+````jsx
+// Native <select> styled like Input. Works with React Hook Form's register.
+function Select({ invalid = false, className = '', children, ...restProps }) {
+  return (
+    <select
+      aria-invalid={invalid || undefined}
+      className={`w-full min-h-11 border rounded-lg px-3.5 py-2.5 text-sm bg-white text-med-text-main transition focus:outline-none focus:ring-2 focus:ring-med-primary-600 focus:border-transparent disabled:bg-gray-50 disabled:text-med-text-muted disabled:cursor-not-allowed ${
+        invalid ? 'border-red-400 bg-red-50/20' : 'border-med-border'
+      } ${className}`}
+      {...restProps}
+    >
+      {children}
+    </select>
+  );
+}
+
+export default Select;
+````
+
+**Qué hace y por qué:**
+
+El combo, con el mismo estilo que `Input`. Las opciones (`<option>`) llegan como `children`,
+así cada pantalla las arma con `map`. Las clases `disabled:` le dan aspecto apagado cuando está
+deshabilitado (el formulario de médicos lo deshabilita si no hay especialidades).
+
+##### Archivo 24 de 59 · `Textarea.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (14 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Textarea.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Textarea.jsx` |
+
+````jsx
+function Textarea({ invalid = false, className = '', rows = 4, ...restProps }) {
+  return (
+    <textarea
+      rows={rows}
+      aria-invalid={invalid || undefined}
+      className={`w-full border rounded-lg px-3.5 py-2.5 text-sm bg-white text-med-text-main placeholder-med-text-muted transition resize-y focus:outline-none focus:ring-2 focus:ring-med-primary-600 focus:border-transparent ${
+        invalid ? 'border-red-400 bg-red-50/20' : 'border-med-border'
+      } ${className}`}
+      {...restProps}
+    />
+  );
+}
+
+export default Textarea;
+````
+
+**Qué hace y por qué:**
+
+El campo de varias líneas, con el mismo estilo. `rows = 4` es la altura inicial y `resize-y`
+deja agrandarlo solo hacia abajo. Lo usan la descripción de especialidad (tarea 3) y el motivo
+de la reserva (tarea 7).
+
+##### Archivo 25 de 59 · `Card.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (14 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Card.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Card.jsx` |
+
+````jsx
+// `padded={false}` removes the inner padding (tables that span the card).
+// Passing `p-0` in className does not work: Tailwind resolves conflicting
+// utilities by CSS order, not by class order.
+function Card({ children, className = '', padded = true }) {
+  return (
+    <div
+      className={`bg-med-card border border-med-border rounded-xl shadow-xs ${padded ? 'p-5' : ''} ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+export default Card;
+````
+
+**Qué hace y por qué:**
+
+La tarjeta blanca con borde. Es la del boilerplate más la prop `padded`. El comentario explica
+por qué: el boilerplate hacía `<Card className="p-0">` para sacarle el relleno a las tablas,
+pero eso **no funciona** en Tailwind, porque cuando dos clases chocan (`p-5` y `p-0`) gana la
+que está después **en el CSS generado**, no la que escribiste después. Con `padded={false}` el
+`p-5` directamente no se pone.
+
+##### Archivo 26 de 59 · `Badge.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (31 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Badge.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Badge.jsx` |
+
+````jsx
+const TONES = {
+  success: {
+    pill: 'bg-med-active-bg text-med-active-text',
+    dot: 'bg-med-active-text',
+  },
+  danger: {
+    pill: 'bg-med-danger-bg text-med-danger-text',
+    dot: 'bg-med-danger-text',
+  },
+  warning: {
+    pill: 'bg-med-leave-bg text-med-leave-text',
+    dot: 'bg-med-leave-text',
+  },
+  neutral: { pill: 'bg-slate-100 text-slate-700', dot: 'bg-slate-500' },
+};
+
+// Status pill with a dot (spec 10: appointment and doctor states).
+function Badge({ tone = 'neutral', children }) {
+  const { pill, dot } = TONES[tone] ?? TONES.neutral;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${pill}`}
+    >
+      <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+      {children}
+    </span>
+  );
+}
+
+export default Badge;
+````
+
+**Qué hace y por qué:**
+
+La "pastilla" de estado con un punto de color (especificación 10). `TONES` tiene los cuatro
+tonos con los colores del proyecto (`med-*`, 17-PLAN-FRONT sección 8.10). El texto siempre va:
+el estado no se comunica solo con color (especificación 12.4). `whitespace-nowrap` evita que
+"Sin agenda" se parta en dos líneas.
+
+##### Archivo 27 de 59 · `Avatar.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (29 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Avatar.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Avatar.jsx` |
+
+````jsx
+const SIZES = {
+  md: 'w-9 h-9 rounded-full text-xs',
+  lg: 'w-12 h-12 rounded-xl text-base',
+};
+
+// "Dra. Ana María López" -> "AM". The title prefix is skipped.
+function initials(name = '') {
+  return name
+    .trim()
+    .replace(/^(dra?\.?)\s+/i, '')
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join('');
+}
+
+// Initials instead of the mockup photos (spec 10).
+function Avatar({ name, size = 'md' }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`${SIZES[size] ?? SIZES.md} shrink-0 bg-med-primary-100 text-med-primary-700 font-bold flex items-center justify-center`}
+    >
+      {initials(name)}
+    </span>
+  );
+}
+
+export default Avatar;
+````
+
+**Qué hace y por qué:**
+
+Las iniciales en un círculo, en lugar de las fotos de los mockups (especificación 10 y 14).
+
+La función `initials` va paso a paso: `trim()` saca espacios de los costados; `replace` con la
+expresión `/^(dra?\.?)\s+/i` borra el título del principio: `^` es "al principio", `dra?` es
+"dr" con una "a" opcional, `\.?` un punto opcional, `\s+` uno o más espacios, y la `i` del final
+ignora mayúsculas. Después `split(/\s+/)` corta por espacios, `slice(0, 2)` se queda con las dos
+primeras palabras y `map` toma la primera letra de cada una. "Dra. Ana María López" → "AM".
+
+Lleva `aria-hidden` porque el nombre completo siempre está escrito al lado.
+
+##### Archivo 28 de 59 · `Switch.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (29 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Switch.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Switch.jsx` |
+
+````jsx
+// On/off toggle (spec 10). `label` names it for screen readers; the visible
+// text says Activo / Inactivo.
+function Switch({ checked, onChange, label }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={`${label}: ${checked ? 'activo' : 'inactivo'}`}
+      onClick={() => onChange(!checked)}
+      className="min-h-11 inline-flex items-center gap-2 text-xs font-semibold text-med-text-sub"
+    >
+      <span
+        className={`relative inline-block w-10 h-6 rounded-full transition ${
+          checked ? 'bg-med-primary-700' : 'bg-gray-300'
+        }`}
+      >
+        <span
+          className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${
+            checked ? 'left-5' : 'left-1'
+          }`}
+        />
+      </span>
+      {checked ? 'Activo' : 'Inactivo'}
+    </button>
+  );
+}
+
+export default Switch;
+````
+
+**Qué hace y por qué:**
+
+El interruptor Activo / Inactivo de la agenda (tarea 5). Es un `<button>` con `role="switch"` y
+`aria-checked`: así un lector de pantalla lo anuncia como interruptor encendido o apagado. Al
+tocarlo llama a `onChange(!checked)` con el valor contrario; no guarda estado propio, lo decide
+quien lo usa. La bolita es un `<span>` que se mueve de `left-1` a `left-5`.
+
+##### Archivo 29 de 59 · `Button.jsx`
+
+| **Qué hacer** | **Mover** el archivo con `git mv src/modules/shared/components/Button.jsx src/modules/shared/components/atoms/Button.jsx` y después reemplazar todo su contenido por este código (42 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/atoms/` |
+| **Archivo** | `Button.jsx` |
+| **Ruta completa** | `src/modules/shared/components/atoms/Button.jsx` |
+
+````jsx
+import Spinner from './Spinner';
+
+// Variants of spec 10: primary (main action), secondary (cancel, back),
+// danger (destructive) and ghost (low emphasis).
+function Button({
+  children,
+  type = 'button',
+  variant = 'primary',
+  loading = false,
+  disabled = false,
+  className = '',
+  ...restProps
+}) {
+  const variantStyle = {
+    primary:
+      'bg-med-primary-900 hover:bg-med-primary-800 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition',
+    secondary:
+      'border border-med-border text-med-text-main bg-white hover:bg-gray-50 font-medium px-4 py-2 rounded-lg transition',
+    ghost:
+      'text-med-text-sub hover:bg-med-primary-50 hover:text-med-primary-900 font-medium px-3 py-2 rounded-lg transition',
+    danger:
+      'bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition',
+  };
+
+  const appliedClass =
+    `min-h-11 ${variantStyle[variant] || variantStyle.primary} disabled:opacity-60 disabled:cursor-not-allowed ${loading ? 'inline-flex items-center justify-center gap-2' : ''} ${className}`.trim();
+
+  return (
+    <button
+      {...restProps}
+      className={appliedClass}
+      type={type}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+    >
+      {loading && <Spinner />}
+      {children}
+    </button>
+  );
+}
+
+export default Button;
+````
+
+**Qué hace y por qué:**
+
+El botón del boilerplate, **movido** a `atoms/` con `git mv` (así Git conserva su historia) y
+reescrito. Lo que cambia respecto del boilerplate (especificación 10):
+
+- Se quita el `console.warn` que revisaba `type`: con `type = 'button'` por defecto ya no hace
+  falta, y no puede quedar ningún `console` (especificación 17.2).
+- **`loading`**: muestra el `Spinner` adelante del texto y deshabilita el botón
+  (`disabled={disabled || loading}`). Así ningún botón se puede apretar dos veces mientras su
+  pedido está en curso (especificación 6.6). `aria-busy` avisa al lector de pantalla que está
+  trabajando.
+- `min-h-11` (44 px) y las clases `disabled:` para que se vea apagado.
+- Las variantes son las cuatro de la especificación 10, como dice el comentario de arriba:
+  `primary` (la acción principal, y la que se usa si no se pasa `variant`), `secondary` (borde
+  gris: cancelar, volver), `danger` (acciones destructivas) y `ghost` (poco énfasis). La
+  `default` del boilerplate pasa a llamarse `primary`, su `outline` pasa a ser `secondary`, y el
+  `secondary` azul del boilerplate se quita porque no lo usaba nadie. Si llega una variante que no
+  existe, `|| variantStyle.primary` usa la principal.
+
+`{...restProps}` va **antes** de `className`, `type` y `disabled`, así esas tres siempre son las
+que calcula el botón. Por `restProps` también pasa `ref` (React 19): `ConfirmDialog` lo usa para
+poner el foco en "Cancelar".
+
+A partir de acá, y hasta el grupo H, las páginas del boilerplate que importaban el `Button` viejo
+dan error de import: es esperado.
+
+#### Grupo F — Moléculas
+
+Las moléculas juntan átomos con un propósito (17-PLAN-FRONT, sección 9).
+
+##### Archivo 30 de 59 · `Alert.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (21 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/molecules/` |
+| **Archivo** | `Alert.jsx` |
+| **Ruta completa** | `src/modules/shared/components/molecules/Alert.jsx` |
+
+````jsx
+import Icon from '../atoms/Icon';
+
+const tones = {
+  error: 'bg-red-50 border-red-200 text-red-700',
+  success: 'bg-green-50 border-green-200 text-green-700',
+  info: 'bg-med-primary-50 border-med-primary-200 text-med-primary-900',
+};
+
+function Alert({ tone = 'error', children, className = '' }) {
+  return (
+    <div
+      role={tone === 'error' ? 'alert' : 'status'}
+      className={`flex items-start gap-2 p-3 border rounded-lg text-xs ${tones[tone] ?? tones.error} ${className}`}
+    >
+      <Icon name={tone} className="w-4 h-4 shrink-0 mt-px" />
+      <p>{children}</p>
+    </div>
+  );
+}
+
+export default Alert;
+````
+
+**Qué hace y por qué:**
+
+Un aviso con ícono: error, éxito o información. El ícono usa el mismo nombre que el tono
+(`Icon` tiene `error`, `success` e `info`). `role="alert"` hace que el lector de pantalla lo lea
+**en el momento** (para errores); `role="status"` lo lee sin interrumpir (para avisos).
+
+##### Archivo 31 de 59 · `EmptyState.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (15 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/molecules/` |
+| **Archivo** | `EmptyState.jsx` |
+| **Ruta completa** | `src/modules/shared/components/molecules/EmptyState.jsx` |
+
+````jsx
+import Icon from '../atoms/Icon';
+
+function EmptyState({ icon = 'inbox', title, children }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center gap-3 px-6 py-12">
+      <span className="w-12 h-12 rounded-full bg-med-primary-50 text-med-primary-700 flex items-center justify-center">
+        <Icon name={icon} className="w-6 h-6" />
+      </span>
+      <p className="text-sm font-semibold text-med-text-main">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+export default EmptyState;
+````
+
+**Qué hace y por qué:**
+
+Lo que se ve cuando una lista está vacía: un ícono en un círculo, un título y, opcional, lo que
+le pongas adentro (`children`), por ejemplo el botón "Nueva especialidad".
+
+##### Archivo 32 de 59 · `FormField.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (35 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/molecules/` |
+| **Archivo** | `FormField.jsx` |
+| **Ruta completa** | `src/modules/shared/components/molecules/FormField.jsx` |
+
+````jsx
+import { cloneElement } from 'react';
+import Label from '../atoms/Label';
+
+// Label + control + hint + error. Wires id, invalid and aria-describedby
+// into the single control it receives as child.
+function FormField({ id, label, required = false, hint, error, children }) {
+  const hintId = hint ? `${id}-hint` : undefined;
+  const errorId = error ? `${id}-error` : undefined;
+  const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined;
+
+  return (
+    <div className="flex flex-col gap-1.5 w-full">
+      <Label htmlFor={id} required={required}>
+        {label}
+      </Label>
+      {cloneElement(children, {
+        id,
+        invalid: Boolean(error),
+        'aria-describedby': describedBy,
+      })}
+      {hint && (
+        <p id={hintId} className="text-xs text-med-text-sub">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p id={errorId} className="text-xs text-red-500 font-medium">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default FormField;
+````
+
+**Qué hace y por qué:**
+
+Etiqueta + campo + ayuda + error, todo conectado (especificación 10 y 11.2). Se usa así:
+
+```jsx
+<FormField id="specialty-name" label="Nombre" error={errors.name?.message}>
+  <Input {...register('name')} />
+</FormField>
+```
+
+- **`cloneElement(children, {...})`** hace una copia del campo que recibe adentro y le agrega
+  props: el `id` (para que la `Label` lo encuentre), `invalid` (para que se pinte en rojo) y
+  `aria-describedby`. Así quien usa `FormField` no tiene que repetir el `id` en dos lugares.
+- `aria-describedby` le dice al lector de pantalla qué textos describen el campo: el de ayuda
+  (`<id>-hint`) y el de error (`<id>-error`). `[hintId, errorId].filter(Boolean).join(' ')` arma
+  la lista con los que existen; si no hay ninguno, `|| undefined` evita escribir el atributo
+  vacío.
+
+##### Archivo 33 de 59 · `SearchInput.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (42 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/molecules/` |
+| **Archivo** | `SearchInput.jsx` |
+| **Ruta completa** | `src/modules/shared/components/molecules/SearchInput.jsx` |
+
+````jsx
+import { useEffect, useState } from 'react';
+import Input from '../atoms/Input';
+import useDebounce from '../../hooks/useDebounce';
+
+// Search box with debounce. Calls onSearch with the trimmed text only when it
+// has at least `minLength` characters, or with '' when it is shorter
+// (spec 7.4: the API rejects names under 3 characters).
+function SearchInput({
+  id,
+  label,
+  placeholder,
+  onSearch,
+  minLength = 3,
+  delay = 400,
+  className = '',
+}) {
+  const [text, setText] = useState('');
+  const debounced = useDebounce(text.trim(), delay);
+  const term = debounced.length >= minLength ? debounced : '';
+
+  useEffect(() => {
+    onSearch(term);
+  }, [term, onSearch]);
+
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <Input
+        id={id}
+        type="search"
+        icon="search"
+        placeholder={placeholder}
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+      />
+    </div>
+  );
+}
+
+export default SearchInput;
+````
+
+**Qué hace y por qué:**
+
+El buscador con las reglas de la especificación 7.4: espera 400 ms sin escribir (`useDebounce`),
+manda el texto sin espacios de los costados, y solo si tiene **3 o más** letras; con menos manda
+`''`, que quiere decir "sin filtro" (el backend rechaza nombres de menos de 3).
+
+- `text` es lo que se ve en el campo, y cambia con cada letra.
+- `term` se calcula en cada dibujo a partir del valor ya demorado.
+- El efecto llama a `onSearch(term)` **solo cuando cambia `term`**. Por eso escribir "ca" y
+  después "c" no manda nada: `term` sigue siendo `''`.
+- **Ojo para quien lo use:** `onSearch` está en las dependencias del efecto, así que la página
+  tiene que pasarle una función estable, hecha con `useCallback`. Si no, el efecto correría en
+  cada dibujo (en las tareas 3 y 4 se ve por qué importa).
+- La `<label>` lleva `sr-only`: no se ve, pero el lector de pantalla la lee. El campo es
+  `type="search"`.
+
+##### Archivo 34 de 59 · `StatCard.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (34 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/molecules/` |
+| **Archivo** | `StatCard.jsx` |
+| **Ruta completa** | `src/modules/shared/components/molecules/StatCard.jsx` |
+
+````jsx
+import Card from '../atoms/Card';
+import Icon from '../atoms/Icon';
+
+// One dashboard number. Loads on its own: while loading it pulses, and when
+// its call fails it shows a dash without breaking the rest (spec P2).
+function StatCard({ icon, label, value, loading = false, error = null }) {
+  let content = value;
+
+  if (loading) {
+    content = (
+      <span className="block h-9 w-16 rounded bg-gray-200 animate-pulse" />
+    );
+  } else if (error) {
+    content = <span title={error.message}>—</span>;
+  }
+
+  return (
+    <Card className="flex flex-col justify-between">
+      <span className="w-11 h-11 rounded-xl bg-med-primary-50 text-med-primary-900 flex items-center justify-center">
+        <Icon name={icon} className="w-6 h-6" />
+      </span>
+      <div className="mt-6" aria-busy={loading || undefined}>
+        <span className="text-[11px] font-bold uppercase tracking-wider text-med-text-sub">
+          {label}
+        </span>
+        <p className="text-3xl sm:text-4xl font-extrabold text-med-primary-900 mt-1">
+          {content}
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+export default StatCard;
+````
+
+**Qué hace y por qué:**
+
+Una tarjeta de número del tablero (tarea 6, especificación P2). Cada tarjeta maneja su propio
+estado: mientras carga, un rectángulo que late (`animate-pulse`); si su pedido falló, un guion
+con el mensaje en el `title` (aparece al pasar el mouse), sin romper las otras tarjetas.
+`let content = value` y los `if` deciden qué se muestra.
+
+##### Archivo 35 de 59 · `TablePagination.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (46 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/molecules/` |
+| **Archivo** | `TablePagination.jsx` |
+| **Ruta completa** | `src/modules/shared/components/molecules/TablePagination.jsx` |
+
+````jsx
+function TablePagination({
+  currentPage = 1,
+  totalPages = 1,
+  totalItems = 0,
+  pageSize = 10,
+  onPageChange,
+}) {
+  const from = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const to = Math.min(currentPage * pageSize, totalItems);
+
+  return (
+    <nav
+      aria-label="Paginación"
+      className="p-4 bg-med-primary-50/50 border-t border-med-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-med-text-muted"
+    >
+      <span>
+        Mostrando {from} a {to} de {totalItems} resultados
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          aria-label="Página anterior"
+          onClick={() => onPageChange && onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+          className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0 px-2.5 py-1 border border-med-border rounded bg-white text-med-text-sub hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          ‹
+        </button>
+        <span>
+          Página {currentPage} de {Math.max(totalPages, 1)}
+        </span>
+        <button
+          type="button"
+          aria-label="Página siguiente"
+          onClick={() => onPageChange && onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0 px-2.5 py-1 border border-med-border rounded bg-white text-med-text-sub hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          ›
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+export default TablePagination;
+````
+
+**Qué hace y por qué:**
+
+El paginador del boilerplate, movido a `molecules/` (el viejo se borra en el grupo H) y
+corregido:
+
+- El texto dice "resultados" en vez de "registros" (especificación 7.3) y se agrega "Página X de
+  Y". `Math.max(totalPages, 1)` evita "de 0".
+- `<nav aria-label="Paginación">` y `aria-label` en los botones `‹` y `›`, que solos no dicen
+  nada a un lector de pantalla.
+- `min-w-11 min-h-11 sm:min-w-0 sm:min-h-0`: en el celular los botones miden 44 px; **desde 640
+  px** (`sm:`) vuelven a su tamaño chico.
+- `flex-col sm:flex-row`: en el celular el texto va arriba de los botones; desde 640 px, al lado.
+- `onPageChange && onPageChange(...)` llama a la función solo si se la pasaron.
+
+##### Archivo 36 de 59 · `ConfirmDialog.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (84 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/molecules/` |
+| **Archivo** | `ConfirmDialog.jsx` |
+| **Ruta completa** | `src/modules/shared/components/molecules/ConfirmDialog.jsx` |
+
+````jsx
+import { useEffect, useRef } from 'react';
+import Button from '../atoms/Button';
+import Alert from './Alert';
+
+// Every destructive action goes through this dialog.
+function ConfirmDialog({
+  open,
+  title,
+  message,
+  confirmLabel = 'Eliminar',
+  cancelLabel = 'Cancelar',
+  loading = false,
+  error = '',
+  onConfirm,
+  onCancel,
+}) {
+  const cancelRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    cancelRef.current?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape' && !loading) {
+        onCancel();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, loading, onCancel]);
+
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
+        className="w-full max-w-sm bg-white rounded-xl shadow-xl p-6 flex flex-col gap-4"
+      >
+        <h2
+          id="confirm-dialog-title"
+          className="text-base font-bold text-med-text-main"
+        >
+          {title}
+        </h2>
+        <p id="confirm-dialog-message" className="text-sm text-med-text-sub">
+          {message}
+        </p>
+        {error && <Alert tone="error">{error}</Alert>}
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <Button
+            ref={cancelRef}
+            variant="secondary"
+            onClick={onCancel}
+            disabled={loading}
+            className="min-h-11"
+          >
+            {cancelLabel}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={onConfirm}
+            loading={loading}
+            className="min-h-11"
+          >
+            {confirmLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ConfirmDialog;
+````
+
+**Qué hace y por qué:**
+
+El diálogo de "¿Seguro?" por el que pasa **toda** acción destructiva (especificación 10).
+
+- `useRef(null)` crea una "referencia" a un elemento de la pantalla; con `ref={cancelRef}` queda
+  apuntando al botón "Cancelar".
+- El efecto corre cuando el diálogo se abre: pone el foco en "Cancelar" (si alguien aprieta
+  Enter sin mirar, no borra nada) y escucha la tecla Escape para cerrarlo, salvo que se esté
+  borrando (`!loading`). La limpieza saca el escuchador: si no, quedaría uno colgado por cada
+  vez que se abrió.
+- `if (!open) return null` va **después** del `useEffect`: los hooks se llaman siempre, nunca
+  después de un `return` (17-PLAN-FRONT, sección 8.3).
+- `fixed inset-0` cubre toda la pantalla con un fondo negro al 40 % (`bg-black/40`); `px-4` deja
+  margen a los costados para que entre a 360 px.
+- `role="alertdialog"`, `aria-modal`, `aria-labelledby` y `aria-describedby` hacen que el lector
+  de pantalla lo anuncie como diálogo y lea el título y el mensaje.
+- Si el borrado falla, `error` se muestra **adentro** del diálogo, con un `Alert`.
+- `flex-col-reverse sm:flex-row`: en el celular los botones van uno abajo del otro con
+  "Eliminar" arriba; desde 640 px van en fila, alineados a la derecha.
+
+#### Grupo G — Organismos
+
+##### Archivo 37 de 59 · `DataTable.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (138 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/organisms/` |
+| **Archivo** | `DataTable.jsx` |
+| **Ruta completa** | `src/modules/shared/components/organisms/DataTable.jsx` |
+
+````jsx
+import Button from '../atoms/Button';
+import Alert from '../molecules/Alert';
+
+const SKELETON_KEYS = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
+
+function SkeletonBar({ className = '' }) {
+  return (
+    <span
+      className={`block h-4 rounded bg-gray-200 animate-pulse ${className}`}
+    />
+  );
+}
+
+const alignClass = (column) =>
+  column.align === 'right' ? 'text-right' : 'text-left';
+
+function TableRows({ columns, rows, rowKey, loading }) {
+  if (loading) {
+    return SKELETON_KEYS.map((key) => (
+      <tr key={key}>
+        {columns.map((column) => (
+          <td key={column.key} className="px-6 py-4">
+            <SkeletonBar />
+          </td>
+        ))}
+      </tr>
+    ));
+  }
+
+  return rows.map((row) => (
+    <tr key={rowKey(row)} className="hover:bg-gray-50/70 transition-colors">
+      {columns.map((column) => (
+        <td key={column.key} className={`px-6 py-4 ${alignClass(column)}`}>
+          {column.render(row)}
+        </td>
+      ))}
+    </tr>
+  ));
+}
+
+function CardRows({ columns, rows, rowKey, loading }) {
+  if (loading) {
+    return SKELETON_KEYS.map((key) => (
+      <li key={key} className="p-4 flex flex-col gap-2">
+        <SkeletonBar className="w-2/3" />
+        <SkeletonBar className="w-1/2" />
+      </li>
+    ));
+  }
+
+  const dataColumns = columns.filter((column) => !column.isAction);
+  const actionColumn = columns.find((column) => column.isAction);
+
+  return rows.map((row) => (
+    <li key={rowKey(row)} className="p-4 flex flex-col gap-2">
+      <dl className="flex flex-col gap-2">
+        {dataColumns.map((column) => (
+          <div key={column.key} className="flex flex-col">
+            <dt className="text-[11px] uppercase tracking-wider text-med-text-muted">
+              {column.header}
+            </dt>
+            <dd className="text-sm text-med-text-main break-words">
+              {column.render(row)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {actionColumn && (
+        <div className="flex justify-end">{actionColumn.render(row)}</div>
+      )}
+    </li>
+  ));
+}
+
+// Generic table with loading, empty and error states. Below `lg` each row
+// becomes a card with label/value pairs (spec 12.2).
+// columns: [{ key, header, render(row), align: 'left'|'right', isAction }]
+function DataTable({
+  columns,
+  rows,
+  rowKey = (row) => row.id,
+  loading = false,
+  error = null,
+  onRetry,
+  empty,
+  caption,
+}) {
+  if (error) {
+    return (
+      <div className="p-6 flex flex-col items-start gap-3">
+        <Alert tone="error">{error.message}</Alert>
+        {onRetry && (
+          <Button variant="secondary" onClick={onRetry} className="min-h-11">
+            Reintentar
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  if (!loading && rows.length === 0) {
+    return empty;
+  }
+
+  const rowProps = { columns, rows, rowKey, loading };
+
+  return (
+    <div aria-busy={loading || undefined}>
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          {caption && <caption className="sr-only">{caption}</caption>}
+          <thead className="bg-med-primary-50/70 text-[11px] uppercase tracking-wider text-med-text-sub border-b border-med-border">
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column.key}
+                  scope="col"
+                  className={`px-6 py-3.5 ${alignClass(column)}`}
+                >
+                  {column.header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-med-border-subtle">
+            <TableRows {...rowProps} />
+          </tbody>
+        </table>
+      </div>
+
+      <ul className="lg:hidden divide-y divide-med-border-subtle">
+        <CardRows {...rowProps} />
+      </ul>
+    </div>
+  );
+}
+
+export default DataTable;
+````
+
+**Qué hace y por qué:**
+
+La tabla genérica de todos los listados (especificación 10 y 12.2). Recibe las columnas como
+datos y dibuja tres estados: cargando, vacío y error.
+
+- **`columns`** es una lista de objetos: `{ key, header, render(row), align, isAction }`.
+  `render` es una función que recibe una fila y devuelve qué dibujar en esa celda. Así la tabla
+  no sabe nada de médicos ni de especialidades.
+- **Error:** el mensaje y, si se pasó `onRetry`, el botón "Reintentar" (variante `secondary`).
+- **Vacío:** si no está cargando y no hay filas, devuelve lo que llegó en `empty` (un
+  `EmptyState` que arma cada página).
+- **Cargando:** tres filas "esqueleto" que laten. `SKELETON_KEYS` son claves fijas para esas
+  filas, porque la `key` nunca es la posición (17-PLAN-FRONT, sección 8.2).
+- **Dos dibujos de lo mismo:** `hidden lg:block` muestra la `<table>` solo desde 1024 px, y
+  `lg:hidden` muestra la lista de tarjetas solo por debajo (especificación 12.2: la tabla
+  completa recién desde `lg:`). En la tarjeta, cada columna es un
+  par etiqueta/valor (`<dt>`/`<dd>`) y la columna de acciones (`isAction`) va abajo a la
+  derecha.
+- `rowKey = (row) => row.id`: la `key` de cada fila es su `id`, salvo que se pase otra función.
+- `<caption className="sr-only">` le da nombre a la tabla para el lector de pantalla y
+  `scope="col"` marca que cada `<th>` es el título de su columna.
+- `TableRows` y `CardRows` son componentes internos del archivo, para que `DataTable` quede corto.
+
+#### Grupo H — Router, limpieza y arreglo de imports
+
+##### Archivo 38 de 59 · `router.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (95 líneas) |
+|---|---|
+| **Carpeta** | `src/` |
+| **Archivo** | `router.jsx` |
+| **Ruta completa** | `src/router.jsx` |
+
+````jsx
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import ProtectedRoute from './modules/auth/components/ProtectedRoute';
+
+// Auth Module
+import AdminLoginPage from './modules/auth/pages/AdminLoginPage';
+
+// Patients Module
+import PatientLoginPage from './modules/patients/pages/PatientLoginPage';
+import PatientLayout from './modules/patients/components/PatientLayout';
+import PatientHome from './modules/patients/pages/PatientHome';
+import AppointmentsPage from './modules/patients/pages/AppointmentsPage';
+
+// Dashboard Module
+import DashboardLayout from './modules/dashboard/components/DashboardLayout';
+import OverviewPage from './modules/dashboard/pages/OverviewPage';
+
+// Domain Modules (Screaming Architecture)
+import DoctorsPage from './modules/doctors/pages/DoctorsPage';
+import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
+import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
+
+const routes = [
+  // Public routes
+  {
+    path: '/login',
+    element: <PatientLoginPage />,
+  },
+  {
+    path: '/admin/login',
+    element: <AdminLoginPage />,
+  },
+
+  // Patient private routes
+  {
+    path: '/',
+    element: (
+      <ProtectedRoute redirectTo="/login">
+        <PatientLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <PatientHome />,
+      },
+      {
+        path: 'appointments',
+        element: <AppointmentsPage />,
+      },
+    ],
+  },
+
+  // Admin private routes
+  {
+    path: '/admin',
+    element: (
+      <ProtectedRoute redirectTo="/admin/login">
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/admin/home" replace />,
+      },
+      {
+        path: 'home',
+        element: <OverviewPage />,
+      },
+      {
+        path: 'patients',
+        element: <AppointmentsSearchPage />,
+      },
+      {
+        path: 'specialties',
+        element: <SpecialtiesPage />,
+      },
+      {
+        path: 'doctors',
+        element: <DoctorsPage />,
+      },
+    ],
+  },
+
+  // Any other URL
+  {
+    path: '*',
+    element: <Navigate to="/" replace />,
+  },
+];
+
+// Created once at module level so it is not rebuilt on every App render.
+const router = createBrowserRouter(routes);
+
+export default router;
+````
+
+**Qué hace y por qué:**
+
+Archivo nuevo con la lista de rutas que antes estaba adentro de `App.jsx` (17-PLAN-FRONT,
+sección 8.9). Las rutas son las mismas del boilerplate, menos las dos duplicadas:
+`/admin/patient-search` y `/admin/appointments` (B10, especificación 8). Los comentarios pasan a
+inglés (17-PLAN-FRONT, sección 4).
+
+Lo importante está al final: `createBrowserRouter(routes)` se llama **una vez**, cuando se carga
+el archivo, y no adentro de un componente (B9). Si estuviera adentro de `App`, cada vez que `App`
+se redibuja se armaría un router nuevo.
+
+##### Archivo 39 de 59 · `App.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (115 líneas) y escribí este código (13 líneas) |
+|---|---|
+| **Carpeta** | `src/` |
+| **Archivo** | `App.jsx` |
+| **Ruta completa** | `src/App.jsx` |
+
+````jsx
+import { RouterProvider } from 'react-router-dom';
+import { AuthProvider } from './modules/auth/context/AuthProvider';
+import router from './router';
+
+function App() {
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
+}
+
+export default App;
+````
+
+**Qué hace y por qué:**
+
+Queda chico: envuelve la app con `AuthProvider` (la sesión) y le pasa el router ya creado a
+`RouterProvider`.
+
+##### Archivo 40 de 59 · `useAuth.js`
+
+| **Qué hacer** | **Mover** el archivo con `git mv src/modules/auth/hook/useAuth.js src/modules/auth/hooks/useAuth.js`. El contenido no cambia: no hay que escribir nada |
+|---|---|
+| **Carpeta** | `src/modules/auth/hooks/` |
+| **Archivo** | `useAuth.js` |
+| **Ruta completa** | `src/modules/auth/hooks/useAuth.js` |
+
+**Qué hace y por qué:**
+
+La carpeta `auth/hook/` pasa a llamarse `auth/hooks/`, como en el resto del proyecto
+(especificación 3.1). El contenido **no cambia**: solo se mueve, no hay que escribir nada.
+Apenas lo movés, los cinco archivos que lo importaban dan error; se arreglan con los cinco que
+siguen.
+
+##### Archivo 41 de 59 · `ProtectedRoute.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/auth/components/` |
+| **Archivo** | `ProtectedRoute.jsx` |
+| **Ruta completa** | `src/modules/auth/components/ProtectedRoute.jsx` |
+
+**Líneas 1 a 5** (en el archivo ya modificado):
+
+````diff
+@@ -1,5 +1,5 @@
+ import { Navigate } from 'react-router-dom';
+-import useAuth from '../hook/useAuth';
++import useAuth from '../hooks/useAuth';
+ 
+ function ProtectedRoute({ children, redirectTo = '/login' }) {
+   const { isAuthenticated } = useAuth();
+````
+
+**Qué hace y por qué:**
+
+Solo la ruta del import de `useAuth` (`../hook/` → `../hooks/`).
+
+##### Archivo 42 de 59 · `AdminLoginPage.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/auth/pages/` |
+| **Archivo** | `AdminLoginPage.jsx` |
+| **Ruta completa** | `src/modules/auth/pages/AdminLoginPage.jsx` |
+
+**Líneas 1 a 7** (en el archivo ya modificado):
+
+````diff
+@@ -1,7 +1,7 @@
+ import { useState } from 'react';
+ import { useForm } from 'react-hook-form';
+ import { Link, useNavigate } from 'react-router-dom';
+-import useAuth from '../hook/useAuth';
++import useAuth from '../hooks/useAuth';
+ import { frontendErrorMessage } from '../helpers/backendError';
+ 
+ function AdminLoginPage() {
+````
+
+**Qué hace y por qué:**
+
+Solo la ruta del import de `useAuth`.
+
+##### Archivo 43 de 59 · `DashboardLayout.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/components/` |
+| **Archivo** | `DashboardLayout.jsx` |
+| **Ruta completa** | `src/modules/dashboard/components/DashboardLayout.jsx` |
+
+**Líneas 1 a 6** (en el archivo ya modificado):
+
+````diff
+@@ -1,6 +1,6 @@
+ import { useState } from 'react';
+ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+-import useAuth from '../../auth/hook/useAuth';
++import useAuth from '../../auth/hooks/useAuth';
+ 
+ function DashboardLayout() {
+   const [openMobileMenu, setOpenMobileMenu] = useState(false);
+````
+
+**Qué hace y por qué:**
+
+Solo la ruta del import de `useAuth`.
+
+##### Archivo 44 de 59 · `PatientLayout.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/patients/components/` |
+| **Archivo** | `PatientLayout.jsx` |
+| **Ruta completa** | `src/modules/patients/components/PatientLayout.jsx` |
+
+**Líneas 1 a 6** (en el archivo ya modificado):
+
+````diff
+@@ -1,6 +1,6 @@
+ import { useState } from 'react';
+ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+-import useAuth from '../../auth/hook/useAuth';
++import useAuth from '../../auth/hooks/useAuth';
+ 
+ function PatientLayout() {
+   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+````
+
+**Qué hace y por qué:**
+
+Solo la ruta del import de `useAuth`.
+
+##### Archivo 45 de 59 · `PatientLoginPage.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/patients/pages/` |
+| **Archivo** | `PatientLoginPage.jsx` |
+| **Ruta completa** | `src/modules/patients/pages/PatientLoginPage.jsx` |
+
+**Líneas 1 a 8** (en el archivo ya modificado):
+
+````diff
+@@ -1,8 +1,8 @@
+ import { useState } from 'react';
+ import { useForm } from 'react-hook-form';
+ import { Link, useNavigate } from 'react-router-dom';
+-import Button from '../../shared/components/Button';
+-import useAuth from '../../auth/hook/useAuth';
++import Button from '../../shared/components/atoms/Button';
++import useAuth from '../../auth/hooks/useAuth';
+ import { frontendErrorMessage } from '../../auth/helpers/backendError';
+ 
+ function PatientLoginPage() {
+````
+
+**Qué hace y por qué:**
+
+Dos imports: `Button` ahora está en `atoms/` y `useAuth` en `hooks/`.
+
+##### Archivo 46 de 59 · `AuthProvider.jsx`
+
+| **Qué hacer** | **Modificar** 3 lugares del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/auth/context/` |
+| **Archivo** | `AuthProvider.jsx` |
+| **Ruta completa** | `src/modules/auth/context/AuthProvider.jsx` |
+
+**Líneas 1 a 4** (en el archivo ya modificado):
+
+````diff
+@@ -1,5 +1,4 @@
+ import { createContext, useState } from 'react';
+-import { login } from '../services/login';
+ import { loginAdmin } from '../services/adminLogin';
+ import { loginPatient } from '../services/patientLogin';
+ 
+````
+
+**Líneas 21 a 26** (en el archivo ya modificado):
+
+````diff
+@@ -22,18 +21,6 @@ function AuthProvider({ children }) {
+     setIsAuthenticated(true);
+   };
+ 
+-  const singin = async (username, password) => {
+-    const { data, error } = await login(username, password);
+-
+-    if (error) {
+-      return { error };
+-    }
+-
+-    setAuthSession(data);
+-
+-    return { error: null };
+-  };
+-
+   const singinAdmin = async (username, password) => {
+     if (
+       (username === 'admin' ||
+````
+
+**Líneas 71 a 76** (en el archivo ya modificado):
+
+````diff
+@@ -84,7 +71,6 @@ function AuthProvider({ children }) {
+     <AuthContext.Provider
+       value={{
+         isAuthenticated,
+-        singin,
+         singinAdmin,
+         singinPatient,
+         singout,
+````
+
+**Qué hace y por qué:**
+
+Se saca el tercer login: el import de `login` y la función `singin`, que solo usaba el
+`LoginForm` que se borra (B11). El resto del archivo (los logins falsos y `localStorage`) sigue
+como en el boilerplate: lo reescribe la tarea 2.
+
+##### Archivo 47 de 59 · `LoginPage.jsx`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/auth/pages/LoginPage.jsx` |
+|---|---|
+| **Carpeta** | `src/modules/auth/pages/` |
+| **Archivo** | `LoginPage.jsx` |
+| **Ruta completa** | `src/modules/auth/pages/LoginPage.jsx` |
+
+**Qué hace y por qué:**
+
+No aparece en ninguna ruta (B11).
+
+##### Archivo 48 de 59 · `LoginForm.jsx`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/auth/components/LoginForm.jsx` |
+|---|---|
+| **Carpeta** | `src/modules/auth/components/` |
+| **Archivo** | `LoginForm.jsx` |
+| **Ruta completa** | `src/modules/auth/components/LoginForm.jsx` |
+
+**Qué hace y por qué:**
+
+Solo lo usaba `LoginPage` (B11).
+
+##### Archivo 49 de 59 · `login.js`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/auth/services/login.js` |
+|---|---|
+| **Carpeta** | `src/modules/auth/services/` |
+| **Archivo** | `login.js` |
+| **Ruta completa** | `src/modules/auth/services/login.js` |
+
+**Qué hace y por qué:**
+
+Llamaba a `api/auth/login`, que el backend no tiene (B11).
+
+##### Archivo 50 de 59 · `AppointmentsSearchPage.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/appointments/pages/` |
+| **Archivo** | `AppointmentsSearchPage.jsx` |
+| **Ruta completa** | `src/modules/appointments/pages/AppointmentsSearchPage.jsx` |
+
+**Líneas 1 a 6** (en el archivo ya modificado):
+
+````diff
+@@ -1,6 +1,6 @@
+ import { useState } from 'react';
+-import Card from '../../shared/components/Card';
+-import Button from '../../shared/components/Button';
++import Card from '../../shared/components/atoms/Card';
++import Button from '../../shared/components/atoms/Button';
+ 
+ function AppointmentsSearchPage() {
+   const [patientQuery, setPatientQuery] = useState('Johnathan Doe');
+````
+
+_Explicación: después del último archivo de este grupo ("Imports de las páginas del boilerplate")._
+
+##### Archivo 51 de 59 · `OverviewPage.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/dashboard/pages/` |
+| **Archivo** | `OverviewPage.jsx` |
+| **Ruta completa** | `src/modules/dashboard/pages/OverviewPage.jsx` |
+
+**Líneas 1 a 6** (en el archivo ya modificado):
+
+````diff
+@@ -1,6 +1,6 @@
+ import { useNavigate } from 'react-router-dom';
+-import Card from '../../shared/components/Card';
+-import Button from '../../shared/components/Button';
++import Card from '../../shared/components/atoms/Card';
++import Button from '../../shared/components/atoms/Button';
+ 
+ function OverviewPage() {
+   const navigate = useNavigate();
+````
+
+_Explicación: después del último archivo de este grupo ("Imports de las páginas del boilerplate")._
+
+##### Archivo 52 de 59 · `DoctorsPage.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/doctors/pages/` |
+| **Archivo** | `DoctorsPage.jsx` |
+| **Ruta completa** | `src/modules/doctors/pages/DoctorsPage.jsx` |
+
+**Líneas 1 a 6** (en el archivo ya modificado):
+
+````diff
+@@ -1,6 +1,6 @@
+ import { useState } from 'react';
+-import Card from '../../shared/components/Card';
+-import Button from '../../shared/components/Button';
++import Card from '../../shared/components/atoms/Card';
++import Button from '../../shared/components/atoms/Button';
+ 
+ function DoctorsPage() {
+   const [searchTerm, setSearchTerm] = useState('');
+````
+
+_Explicación: después del último archivo de este grupo ("Imports de las páginas del boilerplate")._
+
+##### Archivo 53 de 59 · `AppointmentsPage.jsx`
+
+| **Qué hacer** | **Modificar** 2 lugares del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/patients/pages/` |
+| **Archivo** | `AppointmentsPage.jsx` |
+| **Ruta completa** | `src/modules/patients/pages/AppointmentsPage.jsx` |
+
+**Líneas 1 a 5** (en el archivo ya modificado):
+
+````diff
+@@ -1,5 +1,5 @@
+-import Card from '../../shared/components/Card';
+-import Button from '../../shared/components/Button';
++import Card from '../../shared/components/atoms/Card';
++import Button from '../../shared/components/atoms/Button';
+ 
+ function AppointmentsPage() {
+   const sampleAppointments = [
+````
+
+**Líneas 75 a 81** (en el archivo ya modificado):
+
+````diff
+@@ -75,7 +75,7 @@ function AppointmentsPage() {
+             </div>
+             <div className="flex gap-2 pt-3 border-t border-med-border">
+               <Button
+-                variant="outline"
++                variant="secondary"
+                 className="w-full text-xs"
+                 onClick={() => alert(`Cancelando turno ${appt.id}`)}
+               >
+````
+
+_Explicación: después del último archivo de este grupo ("Imports de las páginas del boilerplate")._
+
+##### Archivo 54 de 59 · `PatientHome.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/patients/pages/` |
+| **Archivo** | `PatientHome.jsx` |
+| **Ruta completa** | `src/modules/patients/pages/PatientHome.jsx` |
+
+**Líneas 1 a 7** (en el archivo ya modificado):
+
+````diff
+@@ -1,7 +1,7 @@
+ import { useState } from 'react';
+ import { useNavigate } from 'react-router-dom';
+-import Card from '../../shared/components/Card';
+-import Button from '../../shared/components/Button';
++import Card from '../../shared/components/atoms/Card';
++import Button from '../../shared/components/atoms/Button';
+ 
+ function PatientHome() {
+   const navigate = useNavigate();
+````
+
+_Explicación: después del último archivo de este grupo ("Imports de las páginas del boilerplate")._
+
+##### Archivo 55 de 59 · `SpecialtiesPage.jsx`
+
+| **Qué hacer** | **Modificar** un lugar del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/modules/specialties/pages/` |
+| **Archivo** | `SpecialtiesPage.jsx` |
+| **Ruta completa** | `src/modules/specialties/pages/SpecialtiesPage.jsx` |
+
+**Líneas 1 a 6** (en el archivo ya modificado):
+
+````diff
+@@ -1,6 +1,6 @@
+ import { useState } from 'react';
+-import Card from '../../shared/components/Card';
+-import Button from '../../shared/components/Button';
++import Card from '../../shared/components/atoms/Card';
++import Button from '../../shared/components/atoms/Button';
+ 
+ function SpecialtiesPage() {
+   const [searchTerm, setSearchTerm] = useState('');
+````
+
+**Qué hace y por qué (los 6 archivos de "Imports de las páginas del boilerplate"):**
+
+Las seis páginas con datos de ejemplo importaban `Card` y `Button` de `shared/components/`.
+Ahora están en `shared/components/atoms/`. Solo cambian esas líneas, salvo en
+`AppointmentsPage.jsx`, donde además el botón de cancelar pasa de `variant="outline"` a
+`variant="secondary"` (la variante `outline` ya no existe en el `Button` nuevo; el aspecto es el
+mismo). El resto de cada página queda igual hasta que su tarea la reescriba.
+
+##### Archivo 56 de 59 · `Card.jsx`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/shared/components/Card.jsx` |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/` |
+| **Archivo** | `Card.jsx` |
+| **Ruta completa** | `src/modules/shared/components/Card.jsx` |
+
+_Explicación: después del último archivo de este grupo ("Los componentes viejos de `shared/components/`")._
+
+##### Archivo 57 de 59 · `Input.jsx`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/shared/components/Input.jsx` |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/` |
+| **Archivo** | `Input.jsx` |
+| **Ruta completa** | `src/modules/shared/components/Input.jsx` |
+
+_Explicación: después del último archivo de este grupo ("Los componentes viejos de `shared/components/`")._
+
+##### Archivo 58 de 59 · `TablePagination.jsx`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/modules/shared/components/TablePagination.jsx` |
+|---|---|
+| **Carpeta** | `src/modules/shared/components/` |
+| **Archivo** | `TablePagination.jsx` |
+| **Ruta completa** | `src/modules/shared/components/TablePagination.jsx` |
+
+**Qué hace y por qué (los 3 archivos de "Los componentes viejos de `shared/components/`"):**
+
+Con las páginas ya apuntando a `atoms/`, nadie importa estos tres. Sus reemplazos son
+`atoms/Card.jsx`, `atoms/Input.jsx` y `molecules/TablePagination.jsx`, que escribiste en los
+grupos E y F.
+
+##### Archivo 59 de 59 · `react.svg`
+
+| **Qué hacer** | **Borrar** el archivo: `git rm src/assets/react.svg` |
+|---|---|
+| **Carpeta** | `src/assets/` |
+| **Archivo** | `react.svg` |
+| **Ruta completa** | `src/assets/react.svg` |
+
+**Qué hace y por qué:**
+
+El logo de React que trae la plantilla de Vite. No lo importa ningún archivo.
+
+### Cómo probarlo
+
+En esta tarea no hay pantallas nuevas: lo que se prueba es que **todo siga igual que antes** y
+que la base quede bien conectada.
+
+1. `npm run lint`, `npm run format:check` y `npm run build` pasan sin errores. Si el lint se queja
+   con "Delete `␍`", te faltó el paso del `.gitattributes`.
+2. `git status` antes del commit muestra solo los 59 archivos de la tabla.
+3. Con el backend corriendo (`http://localhost:5278`), `npm run dev`. La pestaña dice
+   **MedPortal**.
+4. Abrí una segunda terminal y corré otra vez `npm run dev`: tiene que **fallar** diciendo que el
+   puerto 5173 está ocupado, en vez de abrirse en el 5174 (`strictPort`). Cerrala.
+5. Andá a `http://localhost:5173/admin/login` y entrá con el login falso del boilerplate:
+   `admin` / `admin123`. Recorré el menú (Tablero, Doctores, Especialidades, Búsqueda de
+   Pacientes): todas las páginas se ven igual que en el boilerplate, con sus datos de ejemplo.
+6. Cerrá sesión y entrá por `http://localhost:5173/login` con `paciente` / `paciente123`:
+   "Reservar turno" y "Mis turnos" se ven igual que antes.
+7. **El backend correcto:** cerrá sesión, abrí F12 → Network y probá en `/admin/login` con
+   cualquier otro usuario. El pedido tiene que salir a `http://localhost:5278/api/admin/auth/login`
+   (puerto 5278, sin proxy). El pedido falla porque ese endpoint no existe en el backend: es el
+   B2, lo arregla la tarea 2. La página muestra "Error al conectar con el servicio
+   administrativo".
+8. **Las rutas duplicadas ya no existen:** con la sesión de admin, entrá a
+   `http://localhost:5173/admin/patient-search`. Ya no muestra la búsqueda: te manda a `/`. Que
+   te deje ver la página del paciente siendo admin es lo esperado por ahora (el boilerplate no
+   distingue roles, B4; lo arregla la tarea 2).
+9. A 360 px (F12 → ícono de celular → ancho 360) las páginas se ven igual que antes de la tarea.
+10. La consola (F12 → Console) no muestra errores en rojo.
+
+### Commit
+
+Si hiciste el commit intermedio del `.gitattributes` (y otros), juntalos en uno solo antes del
+PR, como dice 17-PLAN-FRONT, sección 5:
+
+```bash
+git add -A
+git status                      # solo los 59 archivos de la tabla
+git reset --soft development    # deshace los commits intermedios y deja todos los cambios
+git commit                      # pegá el mensaje de abajo, guardá y cerrá
+git push -u origin chore/front-base
+```
+
+````text
+chore(front): preparar base del boilerplate y kit compartido
+
+Configura backend en 5278, router único, ApiError y componentes, hooks y utilidades de shared/.
+
+````
+
+---
+
+## Tarea 3 — Especialidades: listado, alta y baja
+
+| | |
+|---|---|
+| **Responsable** | Matías |
+| **Rama** | `feat/specialties` |
+| **Sale de** | `development` con las tareas 1 y 2 mergeadas |
+| **Pantallas** | P6 Listado de especialidades y P7 Alta (especificación 9); además 6.4, 6.5, 7.3, 7.4, 11 y 12 |
+| **Archivos** | 7 |
+
+Escribilos **en este orden** (es el orden en que aparecen abajo, cada uno con su número):
+
+| # | Ruta completa | Qué hacer | Líneas |
+|---|---|---|---|
+| 1 | `src/modules/specialties/services/specialtiesService.js` | Crear | +18 −0 |
+| 2 | `src/modules/specialties/hooks/useSpecialties.js` | Crear | +53 −0 |
+| 3 | `src/modules/specialties/components/SpecialtiesTable.jsx` | Crear | +63 −0 |
+| 4 | `src/modules/specialties/components/SpecialtyForm.jsx` | Crear | +93 −0 |
+| 5 | `src/modules/specialties/pages/SpecialtiesPage.jsx` | Reemplazar todo | +127 −247 |
+| 6 | `src/modules/specialties/pages/SpecialtyFormPage.jsx` | Crear | +63 −0 |
+| 7 | `src/router.jsx` | Modificar | +5 −0 |
+
+### Qué problema resuelve
+
+`SpecialtiesPage.jsx` del boilerplate es una página dibujada con una lista fija de cuatro
+especialidades escrita en el código, cada una con su ícono SVG copiado. El buscador filtra esa
+lista en el navegador, el paginador dice siempre "Mostrando 4 de 32 registros", y los botones
+"Nueva Especialidad", editar y eliminar son `alert()`. Además muestra una columna "Estado"
+(Active / Inactive) que el modelo no tiene (B14). El formulario de alta (P7) no existe: es uno
+de los tres que faltan (especificación 0.2).
+
+**Sin edición.** El enunciado v1.4 dice, para el listado de especialidades: "Edición no es
+obligatorio." / "Eliminar si es obligatorio." Por eso esta tarea hace listado, alta y baja, y
+la fila no tiene lápiz. Menos código para escribir y para probar.
+
+### Por qué así
+
+- **La forma de todo CRUD del proyecto.** La página compone; `SpecialtiesTable` dibuja;
+  `useSpecialties` carga; `specialtiesService` habla con la API (17-PLAN-FRONT, sección 8.6). La
+  tarea 4 copia exactamente esta forma.
+- **Una tabla, no un listado propio.** `SpecialtiesTable` solo define las columnas y le pasa
+  todo a `DataTable`, que ya trae los estados de carga, vacío y error, y las tarjetas en el
+  celular (especificación 12.2).
+- **El buscador es el `SearchInput` compartido**, así se cumplen las reglas de la 7.4 sin
+  repetirlas: 3 letras mínimo, 400 ms de espera, sin `name` con el campo vacío y vuelta a la
+  página 1 en cada búsqueda.
+- **El formulario solo da de alta.** `SpecialtyForm` arranca vacío y la página llama a `POST`.
+  No hay que cargar nada antes de dibujarlo, así que no hay spinner ni `reset()`.
+- **Los errores del backend van donde corresponde** (especificación 6.4, 11.2 y P7):
+  `SPECIALTY_DUPLICATED` debajo del campo Nombre; un `400` con `details` va a su campo (`applyFieldErrors`); cualquier otro, a un aviso
+  arriba del formulario.
+- **El aviso de éxito viaja con la navegación** (`useFlashNotice`): el formulario vuelve al
+  listado y el listado muestra "Se creó la especialidad...".
+- **Borrar pasa por `ConfirmDialog`**, y si el backend lo rechaza, el error queda adentro del
+  diálogo. Si borrás la única fila de una página que no es la primera, vuelve a la anterior
+  (especificación P3, casos borde; P6 dice "los mismos cuatro estados de P3").
+- **Se quita la columna "Estado"** (especificación P6, decisión D38): una especialidad inactiva
+  es una dada de baja, y esas no se listan. **Se quita el combo "Estado inicial"** del mockup de
+  P7 por lo mismo.
+- **Contador de caracteres en la descripción**: el mockup sugiere un texto largo, pero el máximo
+  real es 100 (especificación P7).
+
+### Qué afecta
+
+- **Lo que cambia para el usuario:** "Especialidades" del menú del admin muestra datos reales, y
+  existe la ruta nueva `/admin/specialties/new`.
+- **Qué tareas dependen de esta:** ninguna la necesita para compilar. Pero el formulario de
+  médicos (tarea 4) necesita especialidades cargadas, y su enlace "Crear especialidad" lleva a
+  `/admin/specialties/new`, que crea esta tarea.
+- **`src/router.jsx`** también lo tocan la 4 y la 5, cada una en un lugar distinto
+  (17-PLAN-FRONT, sección 7). Si aparece un conflicto ahí, quedate con las dos partes.
+- **Qué no se toca:** nada de `shared/`; nada fuera de `src/modules/specialties/` salvo las
+  rutas.
+
+### Código, archivo por archivo
+
+El orden de escritura va de abajo hacia arriba en las capas: service, hooks, componentes,
+páginas, rutas. Así cada archivo importa cosas que ya existen.
+
+#### Archivo 1 de 7 · `specialtiesService.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (18 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/specialties/services/` |
+| **Archivo** | `specialtiesService.js` |
+| **Ruta completa** | `src/modules/specialties/services/specialtiesService.js` |
+
+````js
+import { instance } from '../../shared/api/axiosInstance';
+
+// The paged list is shared with other features: it lives in shared/services.
+export { getSpecialties } from '../../shared/services/catalogService';
+
+const BASE = 'api/specialties';
+
+async function createSpecialty({ name, description }) {
+  const response = await instance.post(BASE, { name, description });
+
+  return response.data;
+}
+
+async function deleteSpecialty(id) {
+  await instance.delete(`${BASE}/${id}`);
+}
+
+export { createSpecialty, deleteSpecialty };
+````
+
+**Qué hace y por qué:**
+
+El service de especialidades: una función por endpoint (17-PLAN-FRONT, sección 8.6). Ninguna
+sabe de React.
+
+- La primera línea **reexporta** `getSpecialties` del `catalogService` compartido
+  (`export { ... } from ...`): el listado paginado ya existe en `shared/` porque lo usan otras
+  funcionalidades, y así el resto del módulo lo pide a su propio service sin saber dónde vive.
+- `createSpecialty` → `POST api/specialties`, con el cuerpo `{ name, description }`
+  (especificación P7). Se desarma el objeto en los parámetros (`{ name, description }`) para
+  mandar **solo** esos dos campos, aunque reciba más.
+- `deleteSpecialty` → `DELETE`. No devuelve nada.
+- Las URLs se arman con *template strings*: `` `${BASE}/${id}` `` pega el valor de las variables
+  adentro del texto.
+
+#### Archivo 2 de 7 · `useSpecialties.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (53 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/specialties/hooks/` |
+| **Archivo** | `useSpecialties.js` |
+| **Ruta completa** | `src/modules/specialties/hooks/useSpecialties.js` |
+
+````js
+import { useCallback, useEffect, useState } from 'react';
+import { getSpecialties } from '../services/specialtiesService';
+
+const EMPTY_PAGE = { data: [], total: 0 };
+
+// Paged list. Reloads when the params change; a stale response is ignored
+// (spec 3.5). `reload` asks again with the same params.
+function useSpecialties({ pageIndex, pageSize, name }) {
+  const [page, setPage] = useState(EMPTY_PAGE);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+
+    setLoading(true);
+    setError(null);
+
+    getSpecialties({ pageIndex, pageSize, name })
+      .then((result) => {
+        if (!ignore) {
+          setPage({ data: result.data, total: result.total });
+        }
+      })
+      .catch((apiError) => {
+        if (!ignore) {
+          setError(apiError);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [pageIndex, pageSize, name, reloadKey]);
+
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
+
+  return {
+    specialties: page.data,
+    total: page.total,
+    loading,
+    error,
+    reload,
+  };
+}
+
+export default useSpecialties;
+````
+
+**Qué hace y por qué:**
+
+La página actual del listado, filtrada por nombre. Es el mismo patrón que `useDoctors` de la
+tarea 1 (17-PLAN-FRONT, sección 8.4): bandera `ignore`, limpieza, y `reload` con `reloadKey`.
+Este vive en el módulo y no en `shared/` porque solo lo usa la pantalla de especialidades (el
+tablero, que también cuenta especialidades, llama directo al service compartido).
+
+#### Archivo 3 de 7 · `SpecialtiesTable.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (63 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/specialties/components/` |
+| **Archivo** | `SpecialtiesTable.jsx` |
+| **Ruta completa** | `src/modules/specialties/components/SpecialtiesTable.jsx` |
+
+````jsx
+import Icon from '../../shared/components/atoms/Icon';
+import DataTable from '../../shared/components/organisms/DataTable';
+
+function SpecialtiesTable({
+  specialties,
+  loading,
+  error,
+  onRetry,
+  onDelete,
+  empty,
+}) {
+  const columns = [
+    {
+      key: 'name',
+      header: 'Nombre de la especialidad',
+      render: (specialty) => (
+        <span className="font-semibold text-med-primary-900">
+          {specialty.name}
+        </span>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Descripción',
+      render: (specialty) => (
+        <span className="text-med-text-sub">{specialty.description}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Acciones',
+      align: 'right',
+      isAction: true,
+      render: (specialty) => (
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            aria-label={`Eliminar ${specialty.name}`}
+            title="Eliminar"
+            onClick={() => onDelete(specialty)}
+            className="min-w-11 min-h-11 lg:min-w-0 lg:min-h-0 p-1.5 rounded-lg flex items-center justify-center text-med-text-muted hover:bg-red-50 hover:text-red-600 transition"
+          >
+            <Icon name="trash" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <DataTable
+      caption="Especialidades"
+      columns={columns}
+      rows={specialties}
+      loading={loading}
+      error={error}
+      onRetry={onRetry}
+      empty={empty}
+    />
+  );
+}
+
+export default SpecialtiesTable;
+````
+
+**Qué hace y por qué:**
+
+Las columnas de la tabla (especificación P6: Nombre de la especialidad · Descripción ·
+Acciones). Todo lo demás lo hace `DataTable` (tarea 1). Es un componente presentacional: recibe
+los datos y avisa el clic de borrar con `onDelete`, sin saber qué hace.
+
+- Cada columna tiene una `key`, un `header` y un `render` que dibuja la celda de una fila.
+- La columna de acciones lleva `isAction: true`: en el celular `DataTable` la pone abajo de la
+  tarjeta.
+- El botón de solo ícono lleva `aria-label` con el nombre (`Eliminar Cardiología`), así un
+  lector de pantalla dice qué borra (especificación 12.4). `title` muestra el texto al pasar el
+  mouse.
+- `min-w-11 min-h-11 lg:min-w-0 lg:min-h-0`: 44 px para el dedo en el celular y la tablet;
+  desde 1024 px, donde ya se ve la tabla, el tamaño chico.
+
+#### Archivo 4 de 7 · `SpecialtyForm.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (93 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/specialties/components/` |
+| **Archivo** | `SpecialtyForm.jsx` |
+| **Ruta completa** | `src/modules/specialties/components/SpecialtyForm.jsx` |
+
+````jsx
+import { useForm } from 'react-hook-form';
+import Button from '../../shared/components/atoms/Button';
+import Input from '../../shared/components/atoms/Input';
+import Textarea from '../../shared/components/atoms/Textarea';
+import Alert from '../../shared/components/molecules/Alert';
+import FormField from '../../shared/components/molecules/FormField';
+import { trimValue } from '../../shared/utils/formErrors';
+
+const NAME_MESSAGE = 'El nombre debe tener entre 3 y 100 caracteres';
+const DESCRIPTION_MESSAGE =
+  'La descripción debe tener entre 10 y 100 caracteres';
+const DESCRIPTION_MAX = 100;
+
+const lengthBetween = (min, max, message) => (value) =>
+  (value.length >= min && value.length <= max) || message;
+
+function SpecialtyForm({ errorMessage, onSubmit, onCancel }) {
+  const {
+    register,
+    handleSubmit,
+    setError,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    mode: 'onTouched',
+    defaultValues: { name: '', description: '' },
+  });
+
+  const descriptionLength = (watch('description') ?? '').trim().length;
+  const submit = (values) => onSubmit(values, setError);
+
+  return (
+    <form
+      onSubmit={handleSubmit(submit)}
+      noValidate
+      className="flex flex-col gap-5"
+    >
+      {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
+
+      <FormField
+        id="specialty-name"
+        label="Nombre de la especialidad"
+        required
+        error={errors.name?.message}
+      >
+        <Input
+          type="text"
+          placeholder="Ej.: Cardiología"
+          maxLength={100}
+          {...register('name', {
+            setValueAs: trimValue,
+            required: NAME_MESSAGE,
+            validate: lengthBetween(3, 100, NAME_MESSAGE),
+          })}
+        />
+      </FormField>
+
+      <FormField
+        id="specialty-description"
+        label="Descripción"
+        required
+        hint={`${descriptionLength}/${DESCRIPTION_MAX} caracteres`}
+        error={errors.description?.message}
+      >
+        <Textarea
+          placeholder="Ej.: Estudio y tratamiento del corazón"
+          maxLength={DESCRIPTION_MAX}
+          {...register('description', {
+            setValueAs: trimValue,
+            required: DESCRIPTION_MESSAGE,
+            validate: lengthBetween(10, DESCRIPTION_MAX, DESCRIPTION_MESSAGE),
+          })}
+        />
+      </FormField>
+
+      <div className="flex flex-col-reverse lg:flex-row lg:justify-end gap-2">
+        <Button
+          variant="secondary"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="min-h-11"
+        >
+          Cancelar
+        </Button>
+        <Button type="submit" loading={isSubmitting} className="min-h-11">
+          Crear especialidad
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export default SpecialtyForm;
+````
+
+**Qué hace y por qué:**
+
+El formulario de P7, con React Hook Form (17-PLAN-FRONT, sección 8.8; especificación 11).
+
+- `useForm({ mode: 'onTouched', defaultValues: { name: '', description: '' } })`: valida al
+  salir del campo y arranca con los dos campos vacíos.
+- Las reglas de cada campo van en `register`:
+  - `setValueAs: trimValue` le saca los espacios de los costados **antes** de validar y de
+    enviar (especificación 11.2).
+  - `required` con el mensaje.
+  - `validate: lengthBetween(3, 100, NAME_MESSAGE)`. `lengthBetween` es una función que
+    **devuelve otra función**: la que React Hook Form llama con el valor. Esa función devuelve
+    `true` si el largo está bien, o el mensaje si no (`condición || mensaje`).
+- `maxLength={100}` en el `Input` es el atributo de HTML: el navegador no deja escribir más.
+- **El contador:** `watch('description')` devuelve el valor actual y hace que el formulario se
+  redibuje cada vez que cambia. Se muestra como ayuda: `"23/100 caracteres"`.
+- `submit = (values) => onSubmit(values, setError)`: le pasa a la página también `setError`,
+  para que la página pueda poner debajo de un campo un error que vino del backend.
+- `noValidate` en el `<form>` apaga los globitos de validación del navegador, así se ven solo
+  los mensajes propios.
+- `isSubmitting` es `true` mientras corre el `onSubmit` (que es `async`): el botón de guardar
+  muestra el spinner y "Cancelar" queda deshabilitado (especificación 11.2).
+- Los mensajes son los de la especificación 11.1.
+- `flex-col-reverse lg:flex-row lg:justify-end`: hasta 1024 px los botones van uno abajo del
+  otro, con el de guardar arriba; desde 1024 px van en fila, a la derecha. "Cancelar" usa la
+  variante `secondary`.
+
+#### Archivo 5 de 7 · `SpecialtiesPage.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (280 líneas) y escribí este código (160 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/specialties/pages/` |
+| **Archivo** | `SpecialtiesPage.jsx` |
+| **Ruta completa** | `src/modules/specialties/pages/SpecialtiesPage.jsx` |
+
+````jsx
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import SpecialtiesTable from '../components/SpecialtiesTable';
+import useSpecialties from '../hooks/useSpecialties';
+import { deleteSpecialty } from '../services/specialtiesService';
+import Button from '../../shared/components/atoms/Button';
+import Card from '../../shared/components/atoms/Card';
+import Icon from '../../shared/components/atoms/Icon';
+import Alert from '../../shared/components/molecules/Alert';
+import ConfirmDialog from '../../shared/components/molecules/ConfirmDialog';
+import EmptyState from '../../shared/components/molecules/EmptyState';
+import SearchInput from '../../shared/components/molecules/SearchInput';
+import TablePagination from '../../shared/components/molecules/TablePagination';
+import useAsync from '../../shared/hooks/useAsync';
+import useFlashNotice from '../../shared/hooks/useFlashNotice';
+import usePagination from '../../shared/hooks/usePagination';
+
+const NEW_PATH = '/admin/specialties/new';
+
+function SpecialtiesPage() {
+  const navigate = useNavigate();
+  const { pageIndex, pageSize, setPageIndex, reset, totalPages } =
+    usePagination();
+  const [name, setName] = useState('');
+  const [notice, setNotice] = useFlashNotice();
+  const [toDelete, setToDelete] = useState(null);
+  const removal = useAsync(deleteSpecialty);
+
+  const { specialties, total, loading, error, reload } = useSpecialties({
+    pageIndex,
+    pageSize,
+    name,
+  });
+
+  const handleSearch = useCallback(
+    (term) => {
+      setName(term);
+      reset();
+    },
+    [reset]
+  );
+
+  const openDelete = (specialty) => {
+    removal.reset();
+    setToDelete(specialty);
+  };
+
+  const closeDelete = useCallback(() => setToDelete(null), []);
+
+  const confirmDelete = async () => {
+    try {
+      await removal.run(toDelete.id);
+    } catch {
+      return; // the dialog shows removal.error
+    }
+
+    setNotice({
+      tone: 'success',
+      message: `Se eliminó la especialidad ${toDelete.name}`,
+    });
+    setToDelete(null);
+
+    // Deleting the last row of a page other than the first goes back one page.
+    if (specialties.length === 1 && pageIndex > 1) {
+      setPageIndex(pageIndex - 1);
+    } else {
+      reload();
+    }
+  };
+
+  const newButton = (
+    <Button onClick={() => navigate(NEW_PATH)} className="min-h-11">
+      <span className="inline-flex items-center gap-1.5">
+        <Icon name="plus" />
+        Nueva especialidad
+      </span>
+    </Button>
+  );
+
+  const empty = name ? (
+    <EmptyState
+      icon="search"
+      title="No hay especialidades que coincidan con la búsqueda"
+    />
+  ) : (
+    <EmptyState title="Todavía no hay especialidades cargadas">
+      {newButton}
+    </EmptyState>
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-med-text-main">
+            Directorio de Especialidades
+          </h1>
+          <p className="text-sm text-med-text-sub mt-1">
+            Administre las categorías médicas que ofrece el centro.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <SearchInput
+            id="specialties-search"
+            label="Buscar especialidad"
+            placeholder="Buscar especialidad..."
+            onSearch={handleSearch}
+            className="sm:w-64"
+          />
+          {newButton}
+        </div>
+      </div>
+
+      {notice && <Alert tone={notice.tone}>{notice.message}</Alert>}
+
+      <Card padded={false} className="overflow-hidden border-med-border">
+        <div className="p-5 border-b border-med-border flex items-center justify-between">
+          <h2 className="text-base font-bold text-med-primary-900">
+            Registros de Especialidades
+          </h2>
+          {!loading && !error && (
+            <span className="text-xs text-med-text-muted">Total: {total}</span>
+          )}
+        </div>
+
+        <SpecialtiesTable
+          specialties={specialties}
+          loading={loading}
+          error={error}
+          onRetry={reload}
+          onDelete={openDelete}
+          empty={empty}
+        />
+
+        {!error && total > 0 && (
+          <TablePagination
+            currentPage={pageIndex}
+            totalPages={totalPages(total)}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPageIndex}
+          />
+        )}
+      </Card>
+
+      <ConfirmDialog
+        open={Boolean(toDelete)}
+        title="Eliminar especialidad"
+        message={`¿Eliminar la especialidad ${toDelete?.name ?? ''}?`}
+        loading={removal.loading}
+        error={removal.error?.message}
+        onConfirm={confirmDelete}
+        onCancel={closeDelete}
+      />
+    </div>
+  );
+}
+
+export default SpecialtiesPage;
+````
+
+**Qué hace y por qué:**
+
+La página P6. Reemplaza entera la del boilerplate. Junta los hooks y los componentes y decide
+qué pasa en cada clic.
+
+- **Estado de la página:** la paginación (`usePagination`), el texto buscado (`name`), el aviso
+  (`useFlashNotice`), la especialidad que se está por borrar (`toDelete`) y el borrado
+  (`removal = useAsync(deleteSpecialty)`).
+- **`handleSearch` está hecho con `useCallback`** (dependencia: `reset`). El `SearchInput` llama
+  a `onSearch` desde un efecto que tiene a `onSearch` en sus dependencias. Si `handleSearch`
+  fuera una función nueva en cada dibujo, al pasar a la página 2 la página se redibuja, el
+  efecto del buscador corre otra vez, llama a `reset()`... y te devuelve a la página 1. Con
+  `useCallback` es siempre la misma función y el efecto solo corre cuando cambia el texto.
+- **Borrar:** `openDelete` limpia el error de un intento anterior (`removal.reset()`) y abre el
+  diálogo. `confirmDelete` llama a `removal.run(id)`; si falla, sale (`return`) y el diálogo
+  muestra `removal.error`. Si sale bien, muestra el aviso, cierra el diálogo y vuelve a cargar:
+  a la página anterior si era la única fila de una página que no es la primera, o la misma con
+  `reload()`.
+- `closeDelete` también usa `useCallback`, porque `ConfirmDialog` tiene a `onCancel` en las
+  dependencias de su efecto.
+- **`empty`**: dos estados vacíos distintos (especificación P3/P6): con búsqueda, "No hay
+  especialidades que coincidan con la búsqueda"; sin búsqueda, "Todavía no hay especialidades
+  cargadas" con el botón de alta.
+- `flex-col lg:flex-row`: el título arriba del buscador hasta 1024 px; desde ahí, en fila.
+- `Card padded={false}`: la tabla ocupa todo el ancho de la tarjeta.
+- El paginador solo aparece si no hay error y hay resultados.
+
+#### Archivo 6 de 7 · `SpecialtyFormPage.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (63 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/specialties/pages/` |
+| **Archivo** | `SpecialtyFormPage.jsx` |
+| **Ruta completa** | `src/modules/specialties/pages/SpecialtyFormPage.jsx` |
+
+````jsx
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import SpecialtyForm from '../components/SpecialtyForm';
+import { createSpecialty } from '../services/specialtiesService';
+import Card from '../../shared/components/atoms/Card';
+import { applyFieldErrors } from '../../shared/utils/formErrors';
+
+const LIST_PATH = '/admin/specialties';
+const FIELD_MESSAGES = {
+  name: 'El nombre debe tener entre 3 y 100 caracteres',
+  description: 'La descripción debe tener entre 10 y 100 caracteres',
+};
+
+// /admin/specialties/new
+function SpecialtyFormPage() {
+  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const backToList = (notice) =>
+    navigate(LIST_PATH, notice ? { state: { notice } } : undefined);
+
+  const handleSubmit = async (values, setError) => {
+    setErrorMessage('');
+
+    try {
+      await createSpecialty(values);
+
+      backToList({
+        tone: 'success',
+        message: `Se creó la especialidad ${values.name}`,
+      });
+    } catch (apiError) {
+      if (apiError.errorCode === 'SPECIALTY_DUPLICATED') {
+        setError('name', { type: 'server', message: apiError.message });
+      } else if (!applyFieldErrors(apiError, setError, FIELD_MESSAGES)) {
+        setErrorMessage(apiError.message);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-med-text-main">
+          Nueva especialidad
+        </h1>
+        <p className="text-sm text-med-text-sub mt-1">
+          Complete los datos para dar de alta una especialidad.
+        </p>
+      </div>
+
+      <Card padded={false} className="p-6">
+        <SpecialtyForm
+          errorMessage={errorMessage}
+          onSubmit={handleSubmit}
+          onCancel={() => backToList()}
+        />
+      </Card>
+    </div>
+  );
+}
+
+export default SpecialtyFormPage;
+````
+
+**Qué hace y por qué:**
+
+La página P7, en la ruta `/admin/specialties/new`.
+
+- `backToList(notice)` vuelve al listado, con el aviso en el `state` si hay uno.
+- **`handleSubmit`** recibe los valores ya validados y el `setError` del formulario:
+  - llama a `createSpecialty` y vuelve al listado con "Se creó la especialidad...";
+  - si falla, mira el error **en este orden**: `SPECIALTY_DUPLICATED` va al campo Nombre; un
+    `400` con campos conocidos va a esos campos (`applyFieldErrors`); si no, el mensaje va
+    arriba del formulario.
+- El formulario se dibuja enseguida, adentro de una `Card`: no hay nada que cargar antes.
+
+#### Archivo 7 de 7 · `router.jsx`
+
+| **Qué hacer** | **Modificar** 2 lugares del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/` |
+| **Archivo** | `router.jsx` |
+| **Ruta completa** | `src/router.jsx` |
+
+**Líneas 20 a 26** (en el archivo ya modificado):
+
+````diff
+@@ -20,6 +20,7 @@ import OverviewPage from './modules/dashboard/pages/OverviewPage';
+ import DoctorsPage from './modules/doctors/pages/DoctorsPage';
+ import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
+ import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
++import SpecialtyFormPage from './modules/specialties/pages/SpecialtyFormPage';
+ 
+ const routes = [
+   // Public routes: with an active session they redirect to the role's home
+````
+
+**Líneas 87 a 96** (en el archivo ya modificado):
+
+````diff
+@@ -86,6 +87,10 @@ const routes = [
+             path: 'specialties',
+             element: <SpecialtiesPage />,
+           },
++          {
++            path: 'specialties/new',
++            element: <SpecialtyFormPage />,
++          },
+         ],
+       },
+     ],
+````
+
+**Qué hace y por qué:**
+
+La ruta nueva `/admin/specialties/new`, hija de `/admin` (ya protegida por la tarea 2).
+
+### Cómo probarlo
+
+Con el backend corriendo en `http://localhost:5278` y `npm run dev`. Entrá en
+`http://localhost:5173/admin/login` con `admin@system.com` / `Admin1234!` y tocá
+**Especialidades** en el menú.
+
+**Lo que funciona:**
+
+1. Mientras carga se ven filas que laten; después, las especialidades reales y "Total: N".
+2. **Buscar:** escribí "ca": no pasa nada (menos de 3 letras). Escribí "car": al rato se filtra.
+   En F12 → Network el pedido es `api/specialties?pageIndex=1&pageSize=10&name=car`. Borrá el
+   texto: el pedido nuevo va **sin** `name`.
+3. **Crear:** "Nueva especialidad" → completá nombre y descripción (mirá el contador
+   "N/100 caracteres") → "Crear especialidad". Volvés al listado con el aviso verde "Se creó la
+   especialidad ...". Apretá F5: el aviso ya no aparece.
+4. **Borrar:** el tacho → "¿Eliminar la especialidad ...?". Probá Escape y "Cancelar" (no borra
+   nada); después "Eliminar": "Se eliminó la especialidad ...".
+5. **Paginar:** con más de 10 especialidades aparece "Mostrando 1 a 10 de N resultados" y
+   "Página 1 de 2". Pasá a la página 2, borrá todas sus filas: al borrar la última vuelve sola a
+   la página 1.
+
+**Los errores:**
+
+6. En el formulario, "Crear especialidad" con todo vacío: los dos mensajes aparecen debajo de
+   sus campos. Nombre "ab" → "El nombre debe tener entre 3 y 100 caracteres". Descripción de 9
+   letras → "La descripción debe tener entre 10 y 100 caracteres". Solo espacios → el mensaje de
+   obligatorio (el `trim` los saca).
+7. Crear una especialidad con un nombre que ya existe → el error aparece **debajo del campo
+   Nombre** con el mensaje del backend ("Ya existe una especialidad con ese nombre").
+8. Buscá "zzzz" → "No hay especialidades que coincidan con la búsqueda".
+9. **Backend apagado:** pará el backend y recargá → "No se pudo conectar con el servidor" y el
+   botón "Reintentar". Prendelo y tocá "Reintentar": carga. Con el backend apagado, probá
+   borrar: el error aparece adentro del diálogo y el diálogo no se cierra.
+
+**A 360 px** (F12 → ícono de celular → ancho 360): cada especialidad es una tarjeta con
+"Nombre de la especialidad" y "Descripción", y el botón de borrar abajo a la derecha; no hay desplazamiento horizontal; el diálogo de borrar entra en la pantalla con los
+botones uno arriba del otro; en el formulario, los botones ocupan todo el ancho.
+
+### Commit
+
+```bash
+git add -A
+git status                      # solo los 7 archivos de la tabla
+git commit                      # pegá el mensaje de abajo, guardá y cerrá
+git push -u origin feat/specialties
+```
+
+````text
+feat(specialties): conectar listado de especialidades y agregar alta
+
+Búsqueda, paginación y baja con confirmación.
+
+````
+
+---
+
+## Tarea 4 — Médicos: listado, alta y baja
+
+| | |
+|---|---|
+| **Responsable** | Matías |
+| **Rama** | `feat/doctors` |
+| **Sale de** | `development` con las tareas 1 y 2 mergeadas |
+| **Pantallas** | P3 Listado de médicos y P4 Alta (especificación 9); además 6.4, 6.5, 7.4 a 7.6, 11 y 12 |
+| **Archivos** | 6 |
+
+Escribilos **en este orden** (es el orden en que aparecen abajo, cada uno con su número):
+
+| # | Ruta completa | Qué hacer | Líneas |
+|---|---|---|---|
+| 1 | `src/modules/doctors/services/doctorsService.js` | Crear | +22 −0 |
+| 2 | `src/modules/doctors/components/DoctorsTable.jsx` | Crear | +89 −0 |
+| 3 | `src/modules/doctors/components/DoctorForm.jsx` | Crear | +150 −0 |
+| 4 | `src/modules/doctors/pages/DoctorsPage.jsx` | Reemplazar todo | +128 −250 |
+| 5 | `src/modules/doctors/pages/DoctorFormPage.jsx` | Crear | +70 −0 |
+| 6 | `src/router.jsx` | Modificar | +5 −0 |
+
+### Qué problema resuelve
+
+`DoctorsPage.jsx` del boilerplate muestra cuatro médicos escritos en el código, con un emoji de
+avatar y un "ID: MED-4920" inventado. El estado dice "Active" u "On Leave", que no existe en el
+modelo. El buscador filtra esa lista en el navegador, el paginador dice siempre "Mostrando 4 de
+124 registros", y los cinco botones (nuevo, disponibilidad, ver, editar, eliminar) son
+`alert()`. El formulario de alta (P4) no existe.
+
+**Sin detalle ni edición.** El enunciado v1.4 dice, para el listado de médicos: "Detalle y
+edición no es obligatorio." / "Borrado lógico si es obligatorio." Por eso esta tarea hace
+listado, alta y baja: la fila no tiene ojo ni lápiz, solo el tacho.
+
+### Por qué así
+
+- **La misma forma que especialidades** (tarea 3): service, tabla, formulario y dos páginas. Lo que cambia es lo propio de un médico: el combo de especialidades, la matrícula
+  opcional y el estado de agenda.
+- **El listado usa `useDoctors` de `shared/`**, no un hook propio: el tablero (tarea 6) también
+  lo usa, y una funcionalidad no importa de otra (17-PLAN-FRONT, sección 9). Por eso esta tarea
+  no tiene ningún hook propio.
+- **"Con agenda / Sin agenda"** sale de `hasAvailability` con `availabilityInfo`, la constante
+  compartida (especificación 7.6). Reemplaza el "Active / On Leave" del mockup.
+- **La matrícula reemplaza al "ID"** del mockup (especificación P3). Si viene `null`, se muestra
+  un guion. Si la especialidad viene `null` (fue dada de baja), "Sin especialidad".
+- **El combo de especialidades** usa `useSpecialtyOptions` (`pageSize` 100, especificación 7.5).
+  Si no hay especialidades, el combo y el botón de guardar quedan deshabilitados, con el aviso
+  "Primero tenés que crear una especialidad." y un enlace al alta (especificación P4).
+- **El formulario se dibuja enseguida**, aunque las especialidades todavía estén llegando:
+  arranca vacío, así que no hay ningún valor elegido que perder. Mientras cargan, el combo está
+  deshabilitado y dice "Cargando especialidades...".
+- **`DOCTOR_SPECIALTY_NOT_FOUND` al guardar** (alguien borró la especialidad mientras tanto):
+  el combo se vacía, el error aparece debajo de él y la lista se vuelve a pedir (especificación
+  P4, casos borde).
+- **La matrícula vacía se manda como `null`**: la columna acepta nulos, y así no se guarda un
+  texto vacío.
+- **El mensaje de borrar avisa la consecuencia**: "No se va a poder reservar más turnos con este
+  profesional" (especificación P3).
+
+### Qué afecta
+
+- **Lo que cambia para el usuario:** "Doctores" muestra datos reales, y existe
+  `/admin/doctors/new`.
+- **"Agregar disponibilidad horaria" lleva a `/admin/doctors/availability`.** Esa ruta la crea
+  la **tarea 5** (Nicolás). Hasta que se mergee, el botón te redirige: como la URL no existe, la ruta `*` te
+  manda a `/` y, como sos admin, de ahí al Tablero (`/admin/home`). Es lo esperado.
+- **El enlace "Crear especialidad"** del combo lleva a `/admin/specialties/new`, de la tarea 3.
+  Si probás esta rama sin la 3 mergeada, ese enlace también te devuelve al Tablero.
+- **`src/router.jsx`** también lo tocan la 3 y la 5, en lugares distintos (17-PLAN-FRONT,
+  sección 7).
+- **Qué no se toca:** nada de `shared/`; nada fuera de `src/modules/doctors/` salvo las rutas.
+
+### Código, archivo por archivo
+
+#### Archivo 1 de 6 · `doctorsService.js`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (22 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/doctors/services/` |
+| **Archivo** | `doctorsService.js` |
+| **Ruta completa** | `src/modules/doctors/services/doctorsService.js` |
+
+````js
+import { instance } from '../../shared/api/axiosInstance';
+
+// The paged list is shared with other features: it lives in shared/services.
+export { getDoctors } from '../../shared/services/catalogService';
+
+const BASE = 'api/doctors';
+
+async function createDoctor({ name, licenseNumber, specialtyId }) {
+  const response = await instance.post(BASE, {
+    name,
+    licenseNumber,
+    specialtyId,
+  });
+
+  return response.data;
+}
+
+async function deleteDoctor(id) {
+  await instance.delete(`${BASE}/${id}`);
+}
+
+export { createDoctor, deleteDoctor };
+````
+
+**Qué hace y por qué:**
+
+Igual que `specialtiesService` (tarea 3): `POST` y `DELETE` sobre `api/doctors`, con el cuerpo
+`{ name, licenseNumber, specialtyId }` en el alta (especificación P4). Reexporta `getDoctors`
+del `catalogService` por el mismo motivo; hoy nadie lo importa desde acá (el listado usa
+`useDoctors` de `shared/`), pero deja al service del módulo con todo lo que el módulo hace.
+
+#### Archivo 2 de 6 · `DoctorsTable.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (89 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/doctors/components/` |
+| **Archivo** | `DoctorsTable.jsx` |
+| **Ruta completa** | `src/modules/doctors/components/DoctorsTable.jsx` |
+
+````jsx
+import Badge from '../../shared/components/atoms/Badge';
+import Icon from '../../shared/components/atoms/Icon';
+import DataTable from '../../shared/components/organisms/DataTable';
+import { availabilityInfo } from '../../shared/constants/doctorStatus';
+
+const ACTION_CLASS =
+  'min-w-11 min-h-11 lg:min-w-0 lg:min-h-0 p-1.5 rounded-lg flex items-center justify-center text-med-text-muted transition';
+
+function SpecialtyBadge({ specialty }) {
+  if (!specialty) {
+    return (
+      <span className="text-xs italic text-med-text-muted">
+        Sin especialidad
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-med-primary-100 text-med-primary-700">
+      {specialty.name}
+    </span>
+  );
+}
+
+function DoctorsTable({ doctors, loading, error, onRetry, onDelete, empty }) {
+  const columns = [
+    {
+      key: 'name',
+      header: 'Nombre del doctor',
+      render: (doctor) => (
+        <div>
+          <p className="font-semibold text-med-primary-900 leading-tight">
+            {doctor.name}
+          </p>
+          <p className="text-xs text-med-text-muted mt-0.5">
+            Matrícula: {doctor.licenseNumber ?? '-'}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: 'specialty',
+      header: 'Especialidad',
+      render: (doctor) => <SpecialtyBadge specialty={doctor.specialty} />,
+    },
+    {
+      key: 'availability',
+      header: 'Estado de disponibilidad',
+      render: (doctor) => {
+        const { label, tone } = availabilityInfo(doctor.hasAvailability);
+
+        return <Badge tone={tone}>{label}</Badge>;
+      },
+    },
+    {
+      key: 'actions',
+      header: 'Acciones',
+      align: 'right',
+      isAction: true,
+      render: (doctor) => (
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            aria-label={`Eliminar ${doctor.name}`}
+            title="Eliminar"
+            onClick={() => onDelete(doctor)}
+            className={`${ACTION_CLASS} hover:bg-red-50 hover:text-red-600`}
+          >
+            <Icon name="trash" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <DataTable
+      caption="Médicos"
+      columns={columns}
+      rows={doctors}
+      loading={loading}
+      error={error}
+      onRetry={onRetry}
+      empty={empty}
+    />
+  );
+}
+
+export default DoctorsTable;
+````
+
+**Qué hace y por qué:**
+
+Las columnas de P3: Nombre del doctor (con la matrícula debajo) · Especialidad · Estado de
+disponibilidad · Acciones.
+
+- `SpecialtyBadge` es un componente chico del mismo archivo: si no hay especialidad muestra "Sin
+  especialidad" en cursiva; si hay, una pastilla con el nombre.
+- `doctor.licenseNumber ?? '-'`: el guion cuando la matrícula es `null`.
+- La columna de estado llama a `availabilityInfo(doctor.hasAvailability)`, que devuelve
+  `{ label, tone }`, y se lo pasa al `Badge`.
+- Una sola acción: el tacho, con `aria-label` que incluye el nombre. `ACTION_CLASS` guarda
+  las clases del botón de acción (tamaño, borde redondeado, color) y se le suma el color de
+  hover.
+
+#### Archivo 3 de 6 · `DoctorForm.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (150 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/doctors/components/` |
+| **Archivo** | `DoctorForm.jsx` |
+| **Ruta completa** | `src/modules/doctors/components/DoctorForm.jsx` |
+
+````jsx
+import { useForm } from 'react-hook-form';
+import { Link } from 'react-router-dom';
+import Button from '../../shared/components/atoms/Button';
+import Input from '../../shared/components/atoms/Input';
+import Select from '../../shared/components/atoms/Select';
+import Alert from '../../shared/components/molecules/Alert';
+import FormField from '../../shared/components/molecules/FormField';
+import { trimValue } from '../../shared/utils/formErrors';
+
+const NAME_MESSAGE = 'El nombre debe tener entre 3 y 100 caracteres';
+const SPECIALTY_MESSAGE = 'Seleccioná una especialidad';
+const LICENSE_MESSAGE = 'La matrícula no puede superar los 50 caracteres';
+const LICENSE_MAX = 50;
+
+const EMPTY_VALUES = { name: '', specialtyId: '', licenseNumber: '' };
+
+function specialtyHint({ loading, error, options }) {
+  if (loading) {
+    return 'Cargando especialidades...';
+  }
+
+  if (error) {
+    return 'No se pudieron cargar las especialidades';
+  }
+
+  if (options.length === 0) {
+    return (
+      <>
+        Primero tenés que crear una especialidad.{' '}
+        <Link
+          to="/admin/specialties/new"
+          className="font-semibold text-med-primary-700 underline"
+        >
+          Crear especialidad
+        </Link>
+      </>
+    );
+  }
+
+  return undefined;
+}
+
+// `specialties` is { options, loading, error } from useSpecialtyOptions.
+function DoctorForm({ specialties, errorMessage, onSubmit, onCancel }) {
+  const {
+    register,
+    handleSubmit,
+    setError,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({ mode: 'onTouched', defaultValues: EMPTY_VALUES });
+
+  const noSpecialties =
+    specialties.loading ||
+    Boolean(specialties.error) ||
+    specialties.options.length === 0;
+
+  // An empty license is sent as null (the column is nullable).
+  const submit = (values) =>
+    onSubmit(
+      { ...values, licenseNumber: values.licenseNumber || null },
+      { setError, setValue }
+    );
+
+  return (
+    <form
+      onSubmit={handleSubmit(submit)}
+      noValidate
+      className="flex flex-col gap-5"
+    >
+      {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
+
+      <FormField
+        id="doctor-name"
+        label="Nombre completo del doctor"
+        required
+        error={errors.name?.message}
+      >
+        <Input
+          type="text"
+          placeholder="Ej.: Dr. Juan Pérez"
+          maxLength={100}
+          {...register('name', {
+            setValueAs: trimValue,
+            required: NAME_MESSAGE,
+            validate: (value) =>
+              (value.length >= 3 && value.length <= 100) || NAME_MESSAGE,
+          })}
+        />
+      </FormField>
+
+      <FormField
+        id="doctor-specialty"
+        label="Especialidad"
+        required
+        hint={specialtyHint(specialties)}
+        error={errors.specialtyId?.message}
+      >
+        <Select
+          disabled={noSpecialties}
+          {...register('specialtyId', { required: SPECIALTY_MESSAGE })}
+        >
+          <option value="">Seleccioná una especialidad</option>
+          {specialties.options.map((specialty) => (
+            <option key={specialty.id} value={specialty.id}>
+              {specialty.name}
+            </option>
+          ))}
+        </Select>
+      </FormField>
+
+      <FormField
+        id="doctor-license"
+        label="Número de licencia médica"
+        error={errors.licenseNumber?.message}
+      >
+        <Input
+          type="text"
+          placeholder="Ej.: MP-12345"
+          maxLength={LICENSE_MAX}
+          {...register('licenseNumber', {
+            setValueAs: trimValue,
+            maxLength: { value: LICENSE_MAX, message: LICENSE_MESSAGE },
+          })}
+        />
+      </FormField>
+
+      <div className="flex flex-col-reverse lg:flex-row lg:justify-end gap-2">
+        <Button
+          variant="secondary"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="min-h-11"
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          loading={isSubmitting}
+          disabled={noSpecialties}
+          className="min-h-11"
+        >
+          Crear médico
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export default DoctorForm;
+````
+
+**Qué hace y por qué:**
+
+El formulario de P4. Sigue la forma de `SpecialtyForm` (tarea 3), con tres diferencias:
+
+- **El combo de especialidades.** `specialties` es lo que devuelve `useSpecialtyOptions`:
+  `{ options, loading, error }`. La primera opción tiene `value=""` y dice "Seleccioná una
+  especialidad": como está vacía, la regla `required` falla si no se eligió otra. Las demás se
+  arman con `map`, con `key={specialty.id}`.
+- **`specialtyHint`** decide el texto de ayuda debajo del combo: "Cargando especialidades...",
+  "No se pudieron cargar las especialidades", o el aviso con el `<Link>` a "Crear especialidad"
+  cuando no hay ninguna. `<>...</>` es un *fragmento*: agrupa el texto y el enlace sin agregar
+  una etiqueta. Si todo está bien devuelve `undefined` y no se muestra ayuda.
+- **`noSpecialties`** es `true` si las especialidades están cargando, fallaron o no hay. En ese
+  caso el combo y el botón de guardar quedan deshabilitados.
+- La matrícula es opcional: solo tiene `maxLength` con mensaje (la forma de React Hook Form
+  para el largo máximo) y el atributo `maxLength={LICENSE_MAX}` que no deja escribir más de 50.
+- **`submit`** convierte la matrícula vacía en `null` (`values.licenseNumber || null`: si es
+  `''`, usa `null`) y le pasa a la página `{ setError, setValue }`: `setValue` hace falta para
+  vaciar el combo cuando la especialidad ya no existe.
+
+#### Archivo 4 de 6 · `DoctorsPage.jsx`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (288 líneas) y escribí este código (166 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/doctors/pages/` |
+| **Archivo** | `DoctorsPage.jsx` |
+| **Ruta completa** | `src/modules/doctors/pages/DoctorsPage.jsx` |
+
+````jsx
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DoctorsTable from '../components/DoctorsTable';
+import { deleteDoctor } from '../services/doctorsService';
+import Button from '../../shared/components/atoms/Button';
+import Card from '../../shared/components/atoms/Card';
+import Icon from '../../shared/components/atoms/Icon';
+import Alert from '../../shared/components/molecules/Alert';
+import ConfirmDialog from '../../shared/components/molecules/ConfirmDialog';
+import EmptyState from '../../shared/components/molecules/EmptyState';
+import SearchInput from '../../shared/components/molecules/SearchInput';
+import TablePagination from '../../shared/components/molecules/TablePagination';
+import useAsync from '../../shared/hooks/useAsync';
+import useDoctors from '../../shared/hooks/useDoctors';
+import useFlashNotice from '../../shared/hooks/useFlashNotice';
+import usePagination from '../../shared/hooks/usePagination';
+
+const NEW_PATH = '/admin/doctors/new';
+const AVAILABILITY_PATH = '/admin/doctors/availability';
+
+function DoctorsPage() {
+  const navigate = useNavigate();
+  const { pageIndex, pageSize, setPageIndex, reset, totalPages } =
+    usePagination();
+  const [name, setName] = useState('');
+  const [notice, setNotice] = useFlashNotice();
+  const [toDelete, setToDelete] = useState(null);
+  const removal = useAsync(deleteDoctor);
+
+  const { doctors, total, loading, error, reload } = useDoctors({
+    pageIndex,
+    pageSize,
+    name,
+  });
+
+  const handleSearch = useCallback(
+    (term) => {
+      setName(term);
+      reset();
+    },
+    [reset]
+  );
+
+  const openDelete = (doctor) => {
+    removal.reset();
+    setToDelete(doctor);
+  };
+
+  const closeDelete = useCallback(() => setToDelete(null), []);
+
+  const confirmDelete = async () => {
+    try {
+      await removal.run(toDelete.id);
+    } catch {
+      return; // the dialog shows removal.error
+    }
+
+    setNotice({
+      tone: 'success',
+      message: `Se eliminó a ${toDelete.name}`,
+    });
+    setToDelete(null);
+
+    // Deleting the last row of a page other than the first goes back one page.
+    if (doctors.length === 1 && pageIndex > 1) {
+      setPageIndex(pageIndex - 1);
+    } else {
+      reload();
+    }
+  };
+
+  const newButton = (
+    <Button onClick={() => navigate(NEW_PATH)} className="min-h-11">
+      <span className="inline-flex items-center gap-1.5">
+        <Icon name="plus" />
+        Nuevo doctor
+      </span>
+    </Button>
+  );
+
+  const empty = name ? (
+    <EmptyState
+      icon="search"
+      title="No hay médicos que coincidan con la búsqueda"
+    />
+  ) : (
+    <EmptyState title="Todavía no hay médicos cargados">{newButton}</EmptyState>
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-med-text-main">
+            Directorio de Doctores
+          </h1>
+          <p className="text-sm text-med-text-sub mt-1">
+            Gestione el personal médico y supervise su disponibilidad actual.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+          <SearchInput
+            id="doctors-search"
+            label="Buscar doctor por nombre"
+            placeholder="Buscar doctor por nombre..."
+            onSearch={handleSearch}
+            className="sm:w-64"
+          />
+          <Button
+            variant="secondary"
+            onClick={() => navigate(AVAILABILITY_PATH)}
+            className="min-h-11"
+          >
+            Agregar disponibilidad horaria
+          </Button>
+          {newButton}
+        </div>
+      </div>
+
+      {notice && <Alert tone={notice.tone}>{notice.message}</Alert>}
+
+      <Card padded={false} className="overflow-hidden border-med-border">
+        <div className="p-5 border-b border-med-border flex items-center justify-between">
+          <h2 className="text-base font-bold text-med-primary-900">
+            Registros de Doctores
+          </h2>
+          {!loading && !error && (
+            <span className="text-xs text-med-text-muted">Total: {total}</span>
+          )}
+        </div>
+
+        <DoctorsTable
+          doctors={doctors}
+          loading={loading}
+          error={error}
+          onRetry={reload}
+          onDelete={openDelete}
+          empty={empty}
+        />
+
+        {!error && total > 0 && (
+          <TablePagination
+            currentPage={pageIndex}
+            totalPages={totalPages(total)}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPageIndex}
+          />
+        )}
+      </Card>
+
+      <ConfirmDialog
+        open={Boolean(toDelete)}
+        title="Eliminar médico"
+        message={`¿Eliminar a ${toDelete?.name ?? ''}? No se va a poder reservar más turnos con este profesional.`}
+        loading={removal.loading}
+        error={removal.error?.message}
+        onConfirm={confirmDelete}
+        onCancel={closeDelete}
+      />
+    </div>
+  );
+}
+
+export default DoctorsPage;
+````
+
+**Qué hace y por qué:**
+
+La página P3. Reemplaza entera la del boilerplate, y es `SpecialtiesPage` (tarea 3) con estas
+diferencias:
+
+- Usa `useDoctors` de `shared/hooks` en vez de un hook del módulo.
+- Tiene el botón "Agregar disponibilidad horaria" (variante `secondary`) que navega a
+  `/admin/doctors/availability` (ruta de la tarea 5, ver "Qué afecta").
+- El diálogo dice "¿Eliminar a {nombre}? No se va a poder reservar más turnos con este
+  profesional." (especificación P3).
+- Los textos vacíos son "No hay médicos que coincidan con la búsqueda" y "Todavía no hay médicos
+  cargados".
+- La cabecera pasa a fila recién desde 1280 px (`xl:flex-row`), porque tiene un botón más.
+- `handleSearch` y `closeDelete` con `useCallback` por el mismo motivo que en la tarea 3.
+
+#### Archivo 5 de 6 · `DoctorFormPage.jsx`
+
+| **Qué hacer** | **Crear** el archivo nuevo y escribir este código (70 líneas) |
+|---|---|
+| **Carpeta** | `src/modules/doctors/pages/` |
+| **Archivo** | `DoctorFormPage.jsx` |
+| **Ruta completa** | `src/modules/doctors/pages/DoctorFormPage.jsx` |
+
+````jsx
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DoctorForm from '../components/DoctorForm';
+import { createDoctor } from '../services/doctorsService';
+import useSpecialtyOptions from '../../shared/hooks/useSpecialtyOptions';
+import Card from '../../shared/components/atoms/Card';
+import { applyFieldErrors } from '../../shared/utils/formErrors';
+
+const LIST_PATH = '/admin/doctors';
+const FIELD_MESSAGES = {
+  name: 'El nombre debe tener entre 3 y 100 caracteres',
+  specialtyId: 'Seleccioná una especialidad',
+  licenseNumber: 'La matrícula no puede superar los 50 caracteres',
+};
+
+// /admin/doctors/new
+function DoctorFormPage() {
+  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState('');
+  const specialties = useSpecialtyOptions();
+
+  const backToList = (notice) =>
+    navigate(LIST_PATH, notice ? { state: { notice } } : undefined);
+
+  const handleSubmit = async (values, { setError, setValue }) => {
+    setErrorMessage('');
+
+    try {
+      await createDoctor(values);
+
+      backToList({
+        tone: 'success',
+        message: `Se creó el médico ${values.name}`,
+      });
+    } catch (apiError) {
+      if (apiError.errorCode === 'DOCTOR_SPECIALTY_NOT_FOUND') {
+        // Someone deleted the specialty meanwhile: clear it and reload the list.
+        setValue('specialtyId', '');
+        setError('specialtyId', { type: 'server', message: apiError.message });
+        specialties.reload();
+      } else if (!applyFieldErrors(apiError, setError, FIELD_MESSAGES)) {
+        setErrorMessage(apiError.message);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-med-text-main">
+          Nuevo médico
+        </h1>
+        <p className="text-sm text-med-text-sub mt-1">
+          Complete los datos para dar de alta un profesional.
+        </p>
+      </div>
+
+      <Card padded={false} className="p-6">
+        <DoctorForm
+          specialties={specialties}
+          errorMessage={errorMessage}
+          onSubmit={handleSubmit}
+          onCancel={() => backToList()}
+        />
+      </Card>
+    </div>
+  );
+}
+
+export default DoctorFormPage;
+````
+
+**Qué hace y por qué:**
+
+La página P4, en `/admin/doctors/new`. Es `SpecialtyFormPage` (tarea 3) más el combo de
+especialidades:
+
+- `useSpecialtyOptions()` pide la lista de especialidades y se la pasa al formulario.
+- **`handleSubmit`**: llama a `createDoctor` y vuelve al listado con "Se creó el médico...". Si
+  el error es `DOCTOR_SPECIALTY_NOT_FOUND`, vacía el combo (`setValue('specialtyId', '')`), pone
+  el error debajo con el mensaje del backend y pide de nuevo la lista (`specialties.reload()`).
+  El formulario sigue dibujado mientras la lista se recarga, así no se pierde lo escrito. Los
+  demás casos son como en la tarea 3: `400` con campos va a los campos; el resto, arriba.
+
+#### Archivo 6 de 6 · `router.jsx`
+
+| **Qué hacer** | **Modificar** 2 lugares del archivo que ya existe. Lo demás queda igual. En cada bloque, las líneas con `-` se borran y las con `+` se agregan (17-PLAN-FRONT, sección 1) |
+|---|---|
+| **Carpeta** | `src/` |
+| **Archivo** | `router.jsx` |
+| **Ruta completa** | `src/router.jsx` |
+
+**Líneas 18 a 24** (en el archivo ya modificado):
+
+````diff
+@@ -18,6 +18,7 @@ import OverviewPage from './modules/dashboard/pages/OverviewPage';
+ 
+ // Domain Modules (Screaming Architecture)
+ import DoctorsPage from './modules/doctors/pages/DoctorsPage';
++import DoctorFormPage from './modules/doctors/pages/DoctorFormPage';
+ import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
+ import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
+ 
+````
+
+**Líneas 79 a 88** (en el archivo ya modificado):
+
+````diff
+@@ -78,6 +79,10 @@ const routes = [
+             path: 'doctors',
+             element: <DoctorsPage />,
+           },
++          {
++            path: 'doctors/new',
++            element: <DoctorFormPage />,
++          },
+           {
+             path: 'patients',
+             element: <AppointmentsSearchPage />,
+````
+
+**Qué hace y por qué:**
+
+La ruta nueva `/admin/doctors/new`, hija de `/admin`.
+
+### Cómo probarlo
+
+Con el backend corriendo y `npm run dev`. Entrá con `admin@system.com` / `Admin1234!` y tocá
+**Doctores**. Necesitás al menos una especialidad: si ya probaste la tarea 3 la tenés; si no,
+creala por Swagger (`POST /api/specialties`).
+
+**Lo que funciona:**
+
+1. El listado muestra los médicos reales: nombre, "Matrícula: ..." debajo, la especialidad en
+   una pastilla y el badge "Con agenda" o "Sin agenda".
+2. **Buscar:** igual que en especialidades (3 letras, sin `name` con el campo vacío). Con algo
+   que no existe: "No hay médicos que coincidan con la búsqueda".
+3. **Crear:** "Nuevo doctor" → el combo trae las especialidades → completá nombre y
+   especialidad, dejá la matrícula vacía → "Crear médico". Volvés con "Se creó el médico ..." y
+   en la fila dice "Matrícula: -".
+4. **Borrar:** el tacho → "¿Eliminar a ...? No se va a poder reservar más turnos con este
+   profesional." → "Eliminar" → "Se eliminó a ...".
+5. **La ruta de la tarea 5:** "Agregar disponibilidad horaria" te lleva al Tablero mientras la
+   tarea 5 no esté mergeada (ver "Qué afecta").
+
+**Los errores:**
+
+6. "Crear médico" con todo vacío → "El nombre debe tener entre 3 y 100 caracteres" y
+   "Seleccioná una especialidad" debajo de sus campos. En la matrícula no se pueden escribir más
+   de 50 caracteres.
+7. **Especialidad borrada a mitad de camino:** creá una especialidad nueva sin médicos. Abrí
+   "Nuevo doctor", elegila y no guardes. En Swagger (o en otra pestaña, donde vas a tener que
+   iniciar sesión de nuevo, porque la sesión es por pestaña) borrá esa especialidad. Volvé y
+   guardá: el combo se vacía, el error del backend aparece debajo de él y la lista ya no la trae.
+8. **Médico sin especialidad:** borrá la especialidad de un médico que ya existe. En el listado
+   dice "Sin especialidad".
+9. **Backend apagado:** "No se pudo conectar con el servidor" con "Reintentar" en el listado. En
+   "Nuevo doctor", el combo queda deshabilitado con "No se pudieron cargar las especialidades" y
+   el botón de guardar también.
+10. Si no hay **ninguna** especialidad cargada (solo si podés borrarlas todas en tu base de
+    prueba): el combo deshabilitado dice "Primero tenés que crear una especialidad." con el
+    enlace "Crear especialidad".
+
+**A 360 px:** cada médico es una tarjeta con sus tres datos y el botón de borrar abajo a la
+derecha, de 44 px; la cabecera queda apilada (buscador, "Agregar disponibilidad horaria",
+"Nuevo doctor"); no hay desplazamiento horizontal; el formulario apila los campos y los botones
+ocupan todo el ancho.
+
+### Commit
+
+```bash
+git add -A
+git status                      # solo los 6 archivos de la tabla
+git commit                      # pegá el mensaje de abajo, guardá y cerrá
+git push -u origin feat/doctors
+```
+
+````text
+feat(doctors): conectar listado de médicos y agregar alta
+
+Búsqueda, paginación, combo de especialidades y baja con confirmación.
+
+````
+
+---
+
+## Tarea 10 — README del front
+
+| | |
+|---|---|
+| **Responsable** | Matías |
+| **Rama** | `docs/readme` |
+| **Sale de** | `development` con las tareas 1 a 9 mergeadas |
+| **Referencia** | Especificación 17.1 (entregable, pág. 30 del TFI), 4, 5.3, 8 y 3 |
+| **Archivos** | 1 |
+
+Escribilos **en este orden** (es el orden en que aparecen abajo, cada uno con su número):
+
+| # | Ruta completa | Qué hacer | Líneas |
+|---|---|---|---|
+| 1 | `README.md` | Reemplazar todo | +104 −13 |
+
+### Qué problema resuelve
+
+El TFI pide un `README.md` en la raíz de cada aplicación (pág. 30; especificación 17.1). El del
+boilerplate se titula "Unidad 5" y solo lista los comandos de npm, con un aviso de que hay que
+cambiar `VITE_BACKEND_URL`. No dice qué es la app, cómo se entra, ni cómo está organizado el
+código. Tampoco trae lo que pide la especificación 17.1: integrantes, credenciales del admin
+semilla y qué endpoints usa cada pantalla.
+
+### Por qué así
+
+- **Se escribe al final**, cuando todas las pantallas existen, para que lo que dice sea cierto:
+  las zonas, las carpetas de `src/modules` y el comportamiento de la sesión.
+- **Está en español**, porque lo lee el profesor y no es código (17-PLAN-FRONT, sección 4).
+- **Cuenta las reglas de la arquitectura** (la cadena de capas, que ninguna funcionalidad
+  importa de otra, Atomic Design, `ApiError`), las mismas de 17-PLAN-FRONT, secciones 8.6 y 9:
+  son el 30 % de la nota (especificación 1).
+- **Las tablas quedan con las columnas alineadas** porque Prettier también formatea los `.md`.
+  Si `npm run format:check` se queja del README, corré `npm run format`.
+
+### Qué afecta
+
+Ninguna tarea depende de esta, y no cambia nada de la app: es solo documentación. Después de
+esta tarea, `development` se mergea a `main` por el último Pull Request (17-PLAN-FRONT, sección
+3).
+
+El README cubre todo lo que pide la especificación en la sección 17.1: integrantes, cómo
+configurar y ejecutar el proyecto (incluido cómo pisar `.env.development` con
+`.env.development.local`), las credenciales del admin semilla y la tabla de pantallas con los
+endpoints que consume cada una.
+
+### Código
+
+#### Archivo 1 de 1 · `README.md`
+
+| **Qué hacer** | **Reemplazar todo** el contenido: borrá lo que tiene (24 líneas) y escribí este código (115 líneas) |
+|---|---|
+| **Carpeta** | la raíz del proyecto (donde está `package.json`) |
+| **Archivo** | `README.md` |
+| **Ruta completa** | `README.md` |
+
+````markdown
+# MedPortal — Frontend
+
+Frontend del sistema de turnos médicos (TFI de Desarrollo de Software 2026). Tiene dos zonas:
+
+- **Administración** (`/admin`): médicos, especialidades, disponibilidad horaria y búsqueda de turnos.
+- **Pacientes** (`/`): reserva de turnos y consulta o cancelación de los propios.
+
+Stack: React 19, Vite, React Router, React Hook Form, Axios y Tailwind CSS.
+
+## Integrantes
+
+| Legajo | Apellido y Nombre        |
+| ------ | ------------------------ |
+| 56552  | Villafañe, Matías        |
+| 53291  | Khouri, José Nicolás     |
+| 58150  | Ortiz Cancino, Valentín  |
+| 58266  | Zurita, Eduardo Ezequiel |
+
+## Requisitos
+
+- Node.js en su versión LTS (20 o superior).
+- El backend `Dsw2026Tpi.Api` corriendo en `http://localhost:5278` (ver el README del backend).
+
+## Puesta en marcha
+
+1. Instalar las dependencias:
+
+   ```bash
+   npm install
+   ```
+
+2. Revisar la URL del backend. Se toma de la variable `VITE_BACKEND_URL`, definida en
+   `.env.development` con el valor `http://localhost:5278`. Si en su máquina el backend corre en
+   otra dirección, no modifique ese archivo: cree `.env.development.local` con su propio valor
+   (Vite lo lee por encima de `.env.development` y Git lo ignora):
+
+   ```bash
+   VITE_BACKEND_URL=http://localhost:5000
+   ```
+
+3. Con el backend corriendo, levantar la app:
+
+   ```bash
+   npm run dev
+   ```
+
+   Se abre en `http://localhost:5173`. Use ese puerto: el backend solo acepta pedidos (CORS)
+   desde ese origen.
+
+## Scripts
+
+| Comando                | Qué hace                                         |
+| ---------------------- | ------------------------------------------------ |
+| `npm install`          | Instala las dependencias                         |
+| `npm run dev`          | Levanta la app en `http://localhost:5173`        |
+| `npm run lint`         | Revisa el código con ESLint                      |
+| `npm run format`       | Formatea el código con Prettier                  |
+| `npm run format:check` | Verifica el formato sin modificar archivos       |
+| `npm run build`        | Genera la versión de producción en `dist/`       |
+| `npm run preview`      | Sirve localmente la versión generada por `build` |
+
+## Acceso
+
+- **Administrador:** `/admin/login`. El backend crea al iniciar el administrador semilla:
+  `admin@system.com` / `Admin1234!`.
+- **Paciente:** `/login`, con email y DNI. Si es la primera vez, la cuenta se crea al ingresar.
+
+La sesión se guarda en `sessionStorage`: se cierra al cerrar la pestaña. Si el token vence, la app
+vuelve al login de la zona correspondiente con el aviso "Tu sesión expiró. Volvé a ingresar".
+
+## Pantallas y endpoints
+
+| Pantalla                    | Ruta                                                             | Endpoints que consume                                                                                                           |
+| --------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| P1 · Login de administrador | `/admin/login`                                                   | `POST /api/auth/admin/login`                                                                                                    |
+| P2 · Tablero                | `/admin/home`                                                    | `GET /api/doctors` · `GET /api/specialties` · `GET /api/appointments?date&status`                                               |
+| P3 · Médicos                | `/admin/doctors`                                                 | `GET /api/doctors?name&pageIndex&pageSize` · `DELETE /api/doctors/{id}`                                                         |
+| P4 · Alta de médico         | `/admin/doctors/new`                                             | `POST /api/doctors` · `GET /api/specialties`                                                                                    |
+| P5 · Disponibilidad horaria | `/admin/doctors/availability`, `/admin/doctors/:id/availability` | `GET /api/doctors` · `GET /api/doctors/{id}/availabilities?year&month` · `POST /api/availabilities` · `PUT /api/availabilities` |
+| P6 · Especialidades         | `/admin/specialties`                                             | `GET /api/specialties?name&pageIndex&pageSize` · `DELETE /api/specialties/{id}`                                                 |
+| P7 · Alta de especialidad   | `/admin/specialties/new`                                         | `POST /api/specialties`                                                                                                         |
+| P8 · Búsqueda de turnos     | `/admin/patients`                                                | `GET /api/appointments/search` · `GET /api/specialties` · `GET /api/doctors` · `GET /api/doctors?specialtyId`                   |
+| P9 · Login de paciente      | `/login`                                                         | `POST /api/auth/patient/login`                                                                                                  |
+| P10 · Reservar turno        | `/`                                                              | `GET /api/specialties` · `GET /api/doctors?specialtyId` · `GET /api/doctors/{id}/slots?from&to` · `POST /api/appointments`      |
+| P11 · Mis turnos            | `/appointments`                                                  | `GET /api/appointments/patient?dni` · `DELETE /api/appointments/{id}`                                                           |
+
+Todos los endpoints, salvo los dos de login, requieren el token de la sesión; la app lo agrega
+sola en el encabezado `Authorization`. Los errores del backend se muestran con el mensaje que
+devuelve la API.
+
+## Estructura
+
+El código está organizado por funcionalidad (Screaming Architecture), en `src/modules`:
+
+| Carpeta          | Contenido                                                 |
+| ---------------- | --------------------------------------------------------- |
+| `auth`           | Sesión, login de administrador y protección de rutas      |
+| `dashboard`      | Plantilla de administración y tablero (P2)                |
+| `specialties`    | Listado y formulario de especialidades (P6, P7)           |
+| `doctors`        | Listado y formulario de médicos (P3, P4)                  |
+| `availabilities` | Disponibilidad horaria por médico y mes (P5)              |
+| `appointments`   | Búsqueda de turnos y cambio de estado (P8)                |
+| `patients`       | Login, reserva y "Mis turnos" del paciente (P9, P10, P11) |
+| `shared`         | Cliente HTTP, componentes, hooks y utilidades compartidas |
+
+Dentro de cada funcionalidad, las capas dependen solo hacia abajo:
+`pages → components → hooks → services → shared/api/axiosInstance`.
+
+Reglas del proyecto:
+
+- Ninguna funcionalidad importa de otra (salvo `auth`); lo que se comparte va a `shared/`.
+- Solo los `services` usan Axios; los componentes nunca llaman a la API directamente.
+- Los componentes compartidos siguen Atomic Design: `atoms`, `molecules`, `organisms` y `templates`.
+- Los errores del backend llegan como `ApiError` (`status`, `errorCode`, `message`, `details`) y se
+  muestran con el mensaje que devuelve la API.
+````
+
+**Qué hace y por qué:**
+
+Se reemplaza entero. Sus secciones: qué es la app y sus dos zonas; los integrantes (legajo y
+nombre, los mismos del README del backend); requisitos; la puesta en marcha (`npm install`,
+`VITE_BACKEND_URL` y cómo pisarla con `.env.development.local` sin tocar el archivo del
+repositorio, `npm run dev` en el puerto 5173 por CORS); la tabla de scripts; cómo entra cada rol
+(con las credenciales del admin semilla) y cómo se comporta la sesión; la tabla de pantallas con
+su ruta y los endpoints que consume cada una; y la estructura por funcionalidad con las reglas de
+dependencia.
+
+La tabla de pantallas y endpoints se armó leyendo los `services` de cada funcionalidad: si en el
+futuro un service cambia de endpoint, esta tabla también hay que actualizarla.
+
+### Cómo probarlo
+
+1. Abrí el README con la vista previa de Markdown del editor (en VS Code: `Ctrl+Shift+V`): los
+   títulos, las listas y las dos tablas se ven bien.
+2. Comprobá que lo que dice es cierto en la app: con el backend corriendo y `npm run dev`, entrá
+   como admin por `/admin/login` y como paciente por `/login` con email y DNI; cerrá la pestaña y
+   abrí otra: tenés que volver a iniciar sesión (`sessionStorage`).
+3. Comprobá que cada carpeta de la tabla "Estructura" existe en `src/modules`.
+4. Elegí dos o tres filas de la tabla "Pantallas y endpoints" y verificá en la pestaña Network de
+   DevTools (F12) que esa pantalla hace exactamente esos pedidos.
+5. `npm run format:check` pasa (Prettier revisa también el README).
+6. Después del push, mirá cómo queda en GitHub, en la página de la rama.
+
+### Commit
+
+```bash
+git add README.md
+git status                      # solo README.md
+git commit                      # pegá el mensaje de abajo, guardá y cerrá
+git push -u origin docs/readme
+```
+
+````text
+docs: escribir el README del front
+
+Integrantes, puesta en marcha, scripts, acceso y endpoints por pantalla.
+
+````

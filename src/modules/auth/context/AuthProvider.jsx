@@ -6,6 +6,8 @@ import {
   saveSession,
 } from '../../shared/api/sessionStore';
 
+// guarda la sesion en memoria y ofrece los login y logout
+
 const AuthContext = createContext(null);
 
 function AuthProvider({ children }) {
@@ -21,7 +23,7 @@ function AuthProvider({ children }) {
 
   //los errores se propagan como apierror para que cada formulario decida q mostrar
   const loginAdmin = async ({ email, password }) => {
-    const data = await authService.loginAdmin({ email, password });
+    const data = await authService.loginAdmin({ email, password }); // llama al backend
 
     return startSession({ token: data.token, role: data.role, email });
   };
@@ -45,6 +47,7 @@ function AuthProvider({ children }) {
   };
 
   return (
+    // expone para que todos lo vean
     <AuthContext.Provider
       value={{
         session,

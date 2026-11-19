@@ -21,8 +21,6 @@ const mobileLinkClass = ({ isActive }) =>
       : 'text-med-text-sub hover:bg-med-primary-50'
   }`;
 
-// Patient top bar (spec 10): links inline from `md`, a drop-down below.
-// Shows the session email and DNI (spec 5.2).
 function PatientNavbar({ email, dni, onLogout }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
