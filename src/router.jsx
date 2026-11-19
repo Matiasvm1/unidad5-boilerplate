@@ -20,6 +20,7 @@ import OverviewPage from './modules/dashboard/pages/OverviewPage';
 import DoctorsPage from './modules/doctors/pages/DoctorsPage';
 import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
 import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
+import SpecialtyFormPage from './modules/specialties/pages/SpecialtyFormPage';
 
 const routes = [
   // Public routes: with an active session they redirect to the role's home
@@ -85,6 +86,10 @@ const routes = [
           {
             path: 'specialties',
             element: <SpecialtiesPage />,
+          },
+          {
+            path: 'specialties/new',
+            element: <SpecialtyFormPage />,
           },
         ],
       },
