@@ -25,8 +25,6 @@ function TimeSelect({
         aria-describedby={describedBy}
         {...registration} //enchufamos al select
       >
-        // agarra la lista de 48 horarios y por cada uno crea la etiqueta option
-        con key obligatoria
         {TIME_OPTIONS.map((time) => (
           <option key={time} value={time}>
             {time}
