@@ -12,7 +12,7 @@ function stateClass (available, selected) {
 
 
 function SlotButton ({ slot, selected, onSelect}) {
-    const available = slot.status === 'AVAiLABLE';
+    const available = slot.status === 'AVAILABLE';
 
     return (
         <button
