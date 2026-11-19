@@ -2,7 +2,6 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import PatientNavbar from './PatientNavbar';
 import useAuth from '../../auth/hooks/useAuth';
 
-// Patient template: PatientNavbar + content (spec 10).
 function PatientLayout() {
   const navigate = useNavigate();
   const { session, logout } = useAuth();

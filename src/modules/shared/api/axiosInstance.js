@@ -12,6 +12,7 @@ const instance = axios.create({
 //los receptores se ejecutan en orden. El request abre el casillero de readsession, saca el token y
 //se lo pega a la cabecera del request. El response (cuando vuelve) con 401 revisa si el error
 //ocurrio dentro de la app o afuera.
+
 instance.interceptors.request.use((config) => {
   const session = readSession();
 

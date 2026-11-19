@@ -20,6 +20,7 @@ import OverviewPage from './modules/dashboard/pages/OverviewPage';
 import DoctorsPage from './modules/doctors/pages/DoctorsPage';
 import DoctorFormPage from './modules/doctors/pages/DoctorFormPage';
 import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
+import AvailabilityPage from './modules/availabilities/pages/AvailabilityPage';
 import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
 import SpecialtyFormPage from './modules/specialties/pages/SpecialtyFormPage';
 
@@ -75,6 +76,14 @@ const routes = [
           {
             path: 'home',
             element: <OverviewPage />,
+          },
+          {
+            path: 'doctors/availability',
+            element: <AvailabilityPage />,
+          },
+          {
+            path: 'doctors/:id/availability',
+            element: <AvailabilityPage />,
           },
           {
             path: 'doctors',
