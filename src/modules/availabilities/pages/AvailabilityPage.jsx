@@ -1,19 +1,12 @@
-// Se arma el rompecabezas y se completa todo
-// el selector de doctores + los meses + la tarjeta del medico
-// tambien decide si hacer post o put al guardar
+// Weekly schedule of a doctor for one month (CU02). The doctor comes from the
+// URL; the month, the schedule and the save live in useAvailabilityEditor.
 
-import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DoctorPicker from '../components/DoctorPicker';
 import DoctorSummary from '../components/DoctorSummary';
 import MonthPicker from '../components/MonthPicker';
 import WeekScheduleForm from '../components/WeekScheduleForm';
-import useDoctorAvailability from '../hooks/useDoctorAvailability';
-import {
-  createAvailability,
-  updateAvailability,
-} from '../services/availabilitiesService';
-import { monthOptions, toRows } from '../utils/schedule';
+import useAvailabilityEditor from '../hooks/useAvailabilityEditor';
 import useDoctorOptions from '../../shared/hooks/useDoctorOptions';
 import Card from '../../shared/components/atoms/Card';
 import Spinner from '../../shared/components/atoms/Spinner';
@@ -21,7 +14,6 @@ import Alert from '../../shared/components/molecules/Alert';
 
 const LIST_PATH = '/admin/doctors';
 const BASE_PATH = '/admin/doctors/availability';
-const SAVED_MESSAGE = 'Disponibilidad guardada';
 
 function LoadingBlock() {
   return (
@@ -31,67 +23,25 @@ function LoadingBlock() {
   );
 }
 
-//
 function AvailabilityPage() {
-  const { id: doctorId } = useParams(); // leemos el ID de la url, cuando cambias el combo la funcion te navega a la nueva URL
+  const { id: doctorId } = useParams();
   const navigate = useNavigate();
-  const months = useMemo(() => monthOptions(), []);
-  const [monthValue, setMonthValue] = useState(months[0].value);
-  const [notice, setNotice] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-
   const doctors = useDoctorOptions();
-  const selectedMonth = months.find((option) => option.value === monthValue);
-  const { year, month } = selectedMonth;
-  const schedule = useDoctorAvailability(doctorId, year, month);
+  const editor = useAvailabilityEditor(doctorId);
+  const { schedule } = editor;
 
   const doctor = doctors.options.find((option) => option.id === doctorId);
   const unknownDoctor = Boolean(doctorId) && !doctors.loading && !doctor;
-  const isEdit = schedule.availabilities.length > 0; // Si al traer el back vemos q tiene algo, estamos en modo edicion
-  const { rows, hasExtraRanges } = useMemo(
-    () => toRows(schedule.availabilities),
-    [schedule.availabilities]
-  );
+  const showForm =
+    doctor && !schedule.loading && !schedule.error && schedule.version > 0;
 
-  const clearMessages = () => {
-    setNotice('');
-    setErrorMessage('');
-  };
-
+  // The doctor lives in the URL, so a refresh keeps the selection.
   const selectDoctor = (value) => {
-    // no cambia si refrescamos la pagina
-    clearMessages();
+    editor.clearMessages();
     navigate(value ? `${LIST_PATH}/${value}/availability` : BASE_PATH, {
       replace: true,
     });
   };
-
-  const selectMonth = (value) => {
-    clearMessages();
-    setMonthValue(value);
-  };
-
-  const handleSubmit = async (days) => {
-    //aca decide si usamos put o post con isTrue
-    clearMessages();
-    const body = { doctorId, days, year, month };
-
-    try {
-      if (isEdit) {
-        await updateAvailability(body);
-      } else {
-        await createAvailability(body);
-      }
-
-      setNotice(SAVED_MESSAGE);
-      schedule.reload();
-    } catch (apiError) {
-      setErrorMessage(apiError.message);
-    }
-  };
-
-  const showForm =
-    doctor && !schedule.loading && !schedule.error && schedule.version > 0;
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
@@ -117,9 +67,9 @@ function AvailabilityPage() {
               onChange={selectDoctor}
             />
             <MonthPicker
-              months={months}
-              value={monthValue}
-              onChange={selectMonth}
+              months={editor.months}
+              value={editor.monthValue}
+              onChange={editor.selectMonth}
             />
           </div>
         )}
@@ -139,7 +89,7 @@ function AvailabilityPage() {
             </h2>
             {showForm && (
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-med-primary-100 text-med-primary-700">
-                {isEdit ? 'Editando agenda' : 'Nueva agenda'}
+                {editor.isEdit ? 'Editando agenda' : 'Nueva agenda'}
               </span>
             )}
           </div>
@@ -151,9 +101,9 @@ function AvailabilityPage() {
             futuro), salteando los feriados.
           </Alert>
 
-          {notice && <Alert tone="success">{notice}</Alert>}
+          {editor.notice && <Alert tone="success">{editor.notice}</Alert>}
 
-          {hasExtraRanges && showForm && (
+          {editor.hasExtraRanges && showForm && (
             <Alert tone="info">
               Este mes tiene más de un horario en algún día. Se muestra el
               primero; al guardar se reemplazan todos.
@@ -168,11 +118,13 @@ function AvailabilityPage() {
 
           {showForm && (
             <WeekScheduleForm
-              key={`${doctorId}-${monthValue}-${schedule.version}`} // Obliga a react a matar el componente y crear uno nuevo cada vez q se cambia de algo
-              initialRows={rows}
+              // A new key remounts the form, so it starts from the rows just
+              // loaded for this doctor and month.
+              key={`${doctorId}-${editor.monthValue}-${schedule.version}`}
+              initialRows={editor.rows}
               submitLabel="Guardar disponibilidad"
-              errorMessage={errorMessage}
-              onSubmit={handleSubmit}
+              errorMessage={editor.errorMessage}
+              onSubmit={editor.save}
               onCancel={() => navigate(LIST_PATH)}
             />
           )}
