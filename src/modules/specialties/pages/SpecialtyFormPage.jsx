@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SpecialtyForm from '../components/SpecialtyForm';
-import { createSpecialty } from '../services/specialtiesService';
+import useCreateSpecialty from '../hooks/useCreateSpecialty';
 import Card from '../../shared/components/atoms/Card';
 import { applyFieldErrors } from '../../shared/utils/formErrors';
 
@@ -15,6 +15,7 @@ const FIELD_MESSAGES = {
 function SpecialtyFormPage() {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
+  const creation = useCreateSpecialty();
 
   const backToList = (notice) =>
     navigate(LIST_PATH, notice ? { state: { notice } } : undefined);
@@ -23,7 +24,7 @@ function SpecialtyFormPage() {
     setErrorMessage('');
 
     try {
-      await createSpecialty(values);
+      await creation.run(values);
 
       backToList({
         tone: 'success',

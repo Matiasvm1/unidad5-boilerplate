@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppointmentCard from '../components/AppointmentCard';
 import useMyAppointments from '../hooks/useMyAppointments';
-import { cancelAppointment } from '../services/patientAppointmentsService';
+import useCancelAppointment from '../hooks/useCancelAppointment';
 import useAuth from '../../auth/hooks/useAuth';
 import Button from '../../shared/components/atoms/Button';
 import Card from '../../shared/components/atoms/Card';
@@ -11,7 +11,6 @@ import Spinner from '../../shared/components/atoms/Spinner';
 import Alert from '../../shared/components/molecules/Alert';
 import ConfirmDialog from '../../shared/components/molecules/ConfirmDialog';
 import EmptyState from '../../shared/components/molecules/EmptyState';
-import useAsync from '../../shared/hooks/useAsync';
 import useFlashNotice from '../../shared/hooks/useFlashNotice';
 import { formatLongDate } from '../../shared/utils/dates';
 
@@ -30,7 +29,7 @@ function AppointmentsPage() {
   const { session } = useAuth();
   const [notice, setNotice] = useFlashNotice();
   const [toCancel, setToCancel] = useState(null);
-  const cancellation = useAsync(cancelAppointment);
+  const cancellation = useCancelAppointment();
   const { appointments, loading, error, reload } = useMyAppointments(
     session.dni
   );

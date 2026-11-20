@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DoctorForm from '../components/DoctorForm';
-import { createDoctor } from '../services/doctorsService';
+import useCreateDoctor from '../hooks/useCreateDoctor';
 import useSpecialtyOptions from '../../shared/hooks/useSpecialtyOptions';
 import Card from '../../shared/components/atoms/Card';
 import { applyFieldErrors } from '../../shared/utils/formErrors';
@@ -18,6 +18,7 @@ function DoctorFormPage() {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
   const specialties = useSpecialtyOptions();
+  const creation = useCreateDoctor();
 
   const backToList = (notice) =>
     navigate(LIST_PATH, notice ? { state: { notice } } : undefined);
@@ -26,7 +27,7 @@ function DoctorFormPage() {
     setErrorMessage('');
 
     try {
-      await createDoctor(values);
+      await creation.run(values);
 
       backToList({
         tone: 'success',

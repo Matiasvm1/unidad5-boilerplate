@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SpecialtiesTable from '../components/SpecialtiesTable';
 import useSpecialties from '../hooks/useSpecialties';
-import { deleteSpecialty } from '../services/specialtiesService';
+import useDeleteSpecialty from '../hooks/useDeleteSpecialty';
 import Button from '../../shared/components/atoms/Button';
 import Card from '../../shared/components/atoms/Card';
 import Icon from '../../shared/components/atoms/Icon';
@@ -11,7 +11,6 @@ import ConfirmDialog from '../../shared/components/molecules/ConfirmDialog';
 import EmptyState from '../../shared/components/molecules/EmptyState';
 import SearchInput from '../../shared/components/molecules/SearchInput';
 import TablePagination from '../../shared/components/molecules/TablePagination';
-import useAsync from '../../shared/hooks/useAsync';
 import useFlashNotice from '../../shared/hooks/useFlashNotice';
 import usePagination from '../../shared/hooks/usePagination';
 
@@ -24,7 +23,7 @@ function SpecialtiesPage() {
   const [name, setName] = useState('');
   const [notice, setNotice] = useFlashNotice();
   const [toDelete, setToDelete] = useState(null);
-  const removal = useAsync(deleteSpecialty);
+  const removal = useDeleteSpecialty();
 
   const { specialties, total, loading, error, reload } = useSpecialties({
     pageIndex,
