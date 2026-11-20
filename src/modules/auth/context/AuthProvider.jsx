@@ -46,6 +46,9 @@ function AuthProvider({ children }) {
     setSession(null);
   };
 
+  // Single place where the role is checked: guards and views ask here.
+  const hasRole = (roles) => Boolean(session) && roles.includes(session.role);
+
   return (
     // expone para que todos lo vean
     <AuthContext.Provider
@@ -53,6 +56,7 @@ function AuthProvider({ children }) {
         session,
         isAuthenticated: Boolean(session),
         role: session?.role ?? null,
+        hasRole,
         loginAdmin,
         loginPatient,
         logout,
