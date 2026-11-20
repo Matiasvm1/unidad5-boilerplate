@@ -22,11 +22,8 @@ function cancelMessage(appointment) {
     return '';
   }
 
-  return 
-  `¿Cancelar el turno del ${formatLongDate(appointment.date)} 
-  a las ${appointment.startTime} con ${appointment.doctor?.name}?`;
+  return `¿Cancelar el turno del ${formatLongDate(appointment.date)} a las ${appointment.startTime} con ${appointment.doctor?.name}?`;
 }
-
 
 function AppointmentsPage() {
   const navigate = useNavigate();
@@ -53,7 +50,6 @@ function AppointmentsPage() {
       reload();
     } catch (apiError) {
       if (apiError.errorCode === 'APPOINTMENT_NOT_CANCELLABLE') {
-        
         setNotice({ tone: 'error', message: apiError.message });
         setToCancel(null);
         reload();
