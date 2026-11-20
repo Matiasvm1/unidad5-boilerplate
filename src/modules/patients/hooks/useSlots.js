@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getSlots } from '../services/patientAppointmentService';
+import { getSlots } from '../services/patientAppointmentsService';
 
-function useSlots(doctorId, { from, to }) {
+function useSlots(doctorId, from, to) {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

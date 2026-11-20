@@ -1,4 +1,4 @@
-import { instance } from '../../shared/api/axiosInstace';
+import { instance } from '../../shared/api/axiosInstance';
 
 async function getSlots(doctorId, { from, to }) {
   // Implementation here
