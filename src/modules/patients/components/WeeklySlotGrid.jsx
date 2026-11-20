@@ -36,7 +36,6 @@ function DaySlots({ slots, selectedSlotId, onSelect, columnsClass }) {
   );
 }
 
-
 function WeeklySlotGrid({
   days,
   slots,
