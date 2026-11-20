@@ -10,7 +10,6 @@ function compact(params) {
   );
 }
 
-
 async function searchAppointments({
   pageIndex = 1,
   pageSize = 10,

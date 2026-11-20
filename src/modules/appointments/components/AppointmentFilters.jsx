@@ -67,7 +67,6 @@ function AppointmentFilters({ chips, searching = false, onApply, onClear }) {
     : allDoctors.loading;
 
   const specialtyField = register('specialtyId', {
-    
     onChange: () => setValue('doctorId', ''),
   });
 
