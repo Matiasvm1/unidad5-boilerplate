@@ -47,7 +47,8 @@ function AuthProvider({ children }) {
   };
 
   // Single place where the role is checked: guards and views ask here.
-  const hasRole = (roles) => Boolean(session) && roles.includes(session.role);
+  const hasRole = (roles = []) =>
+    Boolean(session) && roles.includes(session.role);
 
   return (
     // expone para que todos lo vean
