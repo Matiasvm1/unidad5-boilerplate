@@ -1,18 +1,21 @@
-// dayschedulerow es la fila indiv de un dia, esta es la planilla completa de la semana
-
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import DayScheduleRow from './DayScheduleRow';
 import { WEEK_DAYS, toPayloadDays } from '../utils/schedule';
 import Button from '../../shared/components/atoms/Button';
 import Alert from '../../shared/components/molecules/Alert';
 
 const DAYS_REQUIRED = 'Tenés que activar al menos un día de atención';
+const INVALID_RANGE = 'La hora de entrada debe ser anterior a la de salida';
 
-// 7 filas, un intervalo por dia gestionado por rhf
-// initial rows sigue el orden de weekdays -> index corresponde a weekdays
-// la pag monta d nuevo el form mediante key cuando hay una nueva programacion
-// entonces initialrows solo sirve para valores predet
+// A day is valid when it is off or when it starts before it ends.
+const validateRow = (row) =>
+  !row.active || row.startTime < row.endTime || INVALID_RANGE;
 
+// The whole week (7 rows, same order as WEEK_DAYS). This is the only
+// component that knows react-hook-form: each row is one controlled field, so
+// DayScheduleRow just gets value, error and onChange. The page remounts the
+// form with a new key when another schedule loads, so initialRows only seeds
+// the defaults.
 function WeekScheduleForm({
   initialRows,
   submitLabel,
@@ -21,21 +24,15 @@ function WeekScheduleForm({
   onCancel,
 }) {
   const {
-    register,
     control,
     handleSubmit,
     watch,
-    formState: { errors, isSubmitted, isSubmitting },
+    formState: { isSubmitted, isSubmitting },
   } = useForm({ defaultValues: { rows: initialRows } });
 
-  // el unico campo es rows, el array con 7 filas dentro
+  const rows = watch('rows');
+  const noActiveDay = !rows.some((row) => row.active);
 
-  const rows = watch('rows'); //le dice a rhf q avise cada vez que cambie algo dentro de las filas
-  const noActiveDay = !rows.some((row) => row.active); // se calcula para ver si al menos existe alguna fila prendida
-
-  // si el user hace clic en guardar y lo de arriba es verdadero
-  // se aborta silenciosamente y no manda nada, si todo est bien
-  // agarra los valores en crudo y los pasa por topayloaddays y se los entrega a la pag
   const submit = async (values) => {
     if (noActiveDay) {
       return;
@@ -51,23 +48,27 @@ function WeekScheduleForm({
       className="flex flex-col gap-4"
     >
       {errorMessage && <Alert tone="error">{errorMessage}</Alert>}
+
       {isSubmitted && noActiveDay && (
         <Alert tone="error">{DAYS_REQUIRED}</Alert>
       )}
 
       <div className="flex flex-col gap-3 lg:gap-0">
-        {' '}
         {WEEK_DAYS.map(({ code, label }, index) => (
-          // recorre weekdays con un map y por c u dibuja un componente
-          <DayScheduleRow //inyecta los register y control y avisa si el dia tiene un error
+          <Controller
             key={code}
-            index={index}
-            day={code}
-            label={label}
-            active={rows[index].active}
-            error={errors.rows?.[index]?.endTime?.message}
-            register={register}
+            name={`rows.${index}`}
             control={control}
+            rules={{ validate: validateRow }}
+            render={({ field, fieldState }) => (
+              <DayScheduleRow
+                day={code}
+                label={label}
+                value={field.value}
+                error={fieldState.error?.message}
+                onChange={field.onChange}
+              />
+            )}
           />
         ))}
       </div>

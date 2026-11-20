@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DoctorsTable from '../components/DoctorsTable';
-import { deleteDoctor } from '../services/doctorsService';
+import useDeleteDoctor from '../hooks/useDeleteDoctor';
 import Button from '../../shared/components/atoms/Button';
 import Card from '../../shared/components/atoms/Card';
 import Icon from '../../shared/components/atoms/Icon';
@@ -10,7 +10,6 @@ import ConfirmDialog from '../../shared/components/molecules/ConfirmDialog';
 import EmptyState from '../../shared/components/molecules/EmptyState';
 import SearchInput from '../../shared/components/molecules/SearchInput';
 import TablePagination from '../../shared/components/molecules/TablePagination';
-import useAsync from '../../shared/hooks/useAsync';
 import useDoctors from '../../shared/hooks/useDoctors';
 import useFlashNotice from '../../shared/hooks/useFlashNotice';
 import usePagination from '../../shared/hooks/usePagination';
@@ -25,7 +24,7 @@ function DoctorsPage() {
   const [name, setName] = useState('');
   const [notice, setNotice] = useFlashNotice();
   const [toDelete, setToDelete] = useState(null);
-  const removal = useAsync(deleteDoctor);
+  const removal = useDeleteDoctor();
 
   const { doctors, total, loading, error, reload } = useDoctors({
     pageIndex,

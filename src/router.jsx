@@ -43,7 +43,7 @@ const routes = [
   // Patient private routes
   {
     path: '/',
-    element: <ProtectedRoute role={ROLES.PATIENT} />,
+    element: <ProtectedRoute allowedRoles={[ROLES.PATIENT]} />,
     children: [
       {
         element: <PatientLayout />,
@@ -64,7 +64,7 @@ const routes = [
   // Admin private routes
   {
     path: '/admin',
-    element: <ProtectedRoute role={ROLES.ADMIN} />,
+    element: <ProtectedRoute allowedRoles={[ROLES.ADMIN]} />,
     children: [
       {
         element: <DashboardLayout />,
